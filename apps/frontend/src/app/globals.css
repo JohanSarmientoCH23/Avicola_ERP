@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --primary: 152 58% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 152 58% 96%;
+    --accent-foreground: 152 58% 26%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+    --info: 217 91% 60%;
+    --info-foreground: 0 0% 100%;
+    --success: 142 71% 45%;
+    --success-foreground: 0 0% 100%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 152 58% 32%;
+    --radius: 0.625rem;
+    --sidebar-bg: 152 58% 18%;
+    --sidebar-hover: 152 58% 24%;
+    --sidebar-active: 152 58% 28%;
+    --sidebar-text: 152 20% 85%;
+    --sidebar-text-active: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+  .btn-success {
+    @apply bg-green-600 text-white hover:bg-green-700 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+  .btn-danger {
+    @apply bg-red-500 text-white hover:bg-red-600 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+  .btn-outline {
+    @apply border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm transition-all duration-200;
+  }
+  .card {
+    @apply bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-50;
+  }
+  .card-content {
+    @apply px-6 py-4;
+  }
+  .input-field {
+    @apply w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 placeholder:text-gray-400;
+  }
+  .select-field {
+    @apply w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all duration-200 appearance-none cursor-pointer;
+  }
+  .table-header {
+    @apply bg-gray-50/80 text-gray-600 text-xs font-semibold uppercase tracking-wider;
+  }
+  .table-row {
+    @apply border-b border-gray-50 hover:bg-green-50/30 transition-colors duration-150;
+  }
+  .badge-success {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800;
+  }
+  .badge-warning {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800;
+  }
+  .badge-danger {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800;
+  }
+  .badge-info {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800;
+  }
+  .stat-card {
+    @apply bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all duration-200;
+  }
+  .page-title {
+    @apply text-xl sm:text-2xl font-bold text-gray-900 tracking-tight;
+  }
+  .page-subtitle {
+    @apply text-sm text-gray-500 mt-1;
+  }
+  .section-title {
+    @apply text-lg font-semibold text-gray-800;
+  }
+  .modal-overlay {
+    @apply fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4;
+  }
+  .modal-content {
+    @apply bg-white rounded-xl shadow-2xl w-full max-h-[90vh] overflow-y-auto;
+    max-width: 480px;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  .animate-slide-in-right {
+    animation: slideInRight 0.2s ease-out;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.25);
+}

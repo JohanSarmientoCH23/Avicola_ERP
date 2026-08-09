@@ -1,0 +1,514 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  ADMINISTRADOR
+  CONTADOR
+  RESPONSABLE_PRODUCCION
+  GALPONERO
+  AUDITOR
+  ALMACENISTA
+}
+
+enum EstadoUsuario {
+  ACTIVO
+  INACTIVO
+  BLOQUEADO
+}
+
+enum EstadoGalpon {
+  ACTIVO
+  INACTIVO
+  MANTENIMIENTO
+}
+
+enum EstadoReporte {
+  BORRADOR
+  PROCESADO
+  VALIDADO
+  RECHAZADO
+}
+
+enum EstadoComparacion {
+  PENDIENTE
+  CORRECTO
+  CON_DIFERENCIAS
+  ERROR
+}
+
+enum EstadoConciliacion {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+}
+
+enum TipoHuevoCodigo {
+  JUMBO
+  EXTRA
+  AA
+  A
+  B
+  REVOLTURA
+  C
+  PIPO
+  BLANCO
+  SUCIO
+  ROTO
+  YEMAS
+}
+
+enum TipoBandeja {
+  AA
+  A
+  B
+}
+
+enum TipoCosto {
+  DIRECTO
+  INDIRECTO
+}
+
+enum EstadoCosto {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
+model Usuario {
+  id          String        @id @default(uuid())
+  email       String        @unique
+  password    String
+  nombre      String
+  apellido    String
+  rol         Rol
+  estado      EstadoUsuario @default(ACTIVO)
+  avatar      String?
+  telefono    String?
+  lastLoginAt DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  reportesDiarios         ReporteDiario[]
+  reportesExcelCreados    ReporteExcel[]
+  comparacionesCreadas    Comparacion[]
+  conciliacionesAprobadas Conciliacion[]
+  auditorias              Auditoria[]
+  refreshTokens           RefreshToken[]
+  recuperaciones          RecuperacionContrasena[]
+  costosCreados           CostoDirecto[]
+
+  @@map("usuarios")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+model RecuperacionContrasena {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  used      Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("recuperaciones_contrasena")
+}
+
+model Lote {
+  id          String    @id @default(uuid())
+  nombre      String
+  descripcion String?
+  fechaInicio DateTime
+  fechaFin    DateTime?
+  estado      String    @default("ACTIVO")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  galpones Galpon[]
+
+  @@map("lotes")
+}
+
+model Galpon {
+  id               String       @id @default(uuid())
+  codigo           String       @unique
+  capacidad        Int
+  gallinasActuales Int          @default(0)
+  estado           EstadoGalpon @default(ACTIVO)
+  loteId           String?
+  lote             Lote?        @relation(fields: [loteId], references: [id])
+  descripcion      String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  detallesReporte     DetalleGalpon[]
+  inventariosGallina  InventarioGallina[]
+  inventariosAlimento InventarioAlimento[]
+  inventariosBandeja  InventarioBandeja[]
+  comparacionDetalles DetalleComparacionGalpon[]
+  CostoDirecto        CostoDirecto[]
+
+  @@map("galpones")
+}
+
+model TipoHuevo {
+  id        String          @id @default(uuid())
+  nombre    String
+  codigo    TipoHuevoCodigo @unique
+  pesoMin   Decimal?        @db.Decimal(5, 2)
+  pesoMax   Decimal?        @db.Decimal(5, 2)
+  orden     Int             @default(0)
+  activo    Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  producciones      ProduccionHuevo[]
+  inventariosHuevos InventarioHuevo[]
+
+  @@map("tipos_huevo")
+}
+
+model ReporteDiario {
+  id             String        @id @default(uuid())
+  fecha          DateTime      @db.Date
+  galponeroId    String
+  galponero      Usuario       @relation(fields: [galponeroId], references: [id])
+  estado         EstadoReporte @default(BORRADOR)
+  observaciones  String?
+  imagenUrl      String?
+  imagenMinioKey String?
+  textoOcr       String?
+  datosOcr       Json?
+  fuente         String        @default("MANUAL")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  detallesGalpon     DetalleGalpon[]
+  produccionesHuevo  ProduccionHuevo[]
+  inventarioBandejas InventarioBandejaReporte[]
+  comparacionesOcr   Comparacion[]
+
+  @@unique([fecha, galponeroId])
+  @@map("reportes_diarios")
+}
+
+model DetalleGalpon {
+  id              String        @id @default(uuid())
+  reporteId       String
+  reporte         ReporteDiario @relation(fields: [reporteId], references: [id], onDelete: Cascade)
+  galponId        String
+  galpon          Galpon        @relation(fields: [galponId], references: [id])
+  mortalidad      Int           @default(0)
+  produccion      Int           @default(0)
+  alimentoEntrada Decimal       @default(0) @db.Decimal(10, 2)
+  alimentoConsumo Decimal       @default(0) @db.Decimal(10, 2)
+  gallinas        Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([reporteId, galponId])
+  @@map("detalles_galpon")
+}
+
+model ProduccionHuevo {
+  id          String        @id @default(uuid())
+  reporteId   String
+  reporte     ReporteDiario @relation(fields: [reporteId], references: [id], onDelete: Cascade)
+  tipoHuevoId String
+  tipoHuevo   TipoHuevo     @relation(fields: [tipoHuevoId], references: [id])
+  cantidad    Int           @default(0)
+  salida      Int           @default(0)
+  saldo       Int           @default(0)
+  pesoTotal   Decimal?      @db.Decimal(10, 2)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@unique([reporteId, tipoHuevoId])
+  @@map("producciones_huevo")
+}
+
+model ReporteExcel {
+  id              String   @id @default(uuid())
+  fecha           DateTime @db.Date
+  archivoUrl      String?
+  archivoMinioKey String?
+  nombreArchivo   String
+  datosParseados  Json?
+  estado          String   @default("PROCESADO")
+  responsableId   String?
+  responsable     Usuario? @relation(fields: [responsableId], references: [id])
+  observaciones   String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  comparaciones Comparacion[]
+
+  @@map("reportes_excel")
+}
+
+model Comparacion {
+  id              String            @id @default(uuid())
+  fecha           DateTime          @db.Date
+  reporteOcrId    String?
+  reporteOcr      ReporteDiario?    @relation(fields: [reporteOcrId], references: [id])
+  reporteExcelId  String
+  reporteExcel    ReporteExcel      @relation(fields: [reporteExcelId], references: [id])
+  estado          EstadoComparacion @default(PENDIENTE)
+  totalCampos     Int               @default(0)
+  camposCorrectos Int               @default(0)
+  camposConError  Int               @default(0)
+  observaciones   String?
+  creadoPorId     String
+  creadoPor       Usuario           @relation(fields: [creadoPorId], references: [id])
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  detalles            DetalleComparacion[]
+  detallesGalpon      DetalleComparacionGalpon[]
+  conciliacionDetalle DetalleConciliacion[]
+
+  @@map("comparaciones")
+}
+
+model DetalleComparacion {
+  id            String      @id @default(uuid())
+  comparacionId String
+  comparacion   Comparacion @relation(fields: [comparacionId], references: [id], onDelete: Cascade)
+  campo         String
+  valorOcr      Decimal?    @db.Decimal(15, 2)
+  valorExcel    Decimal?    @db.Decimal(15, 2)
+  diferencia    Decimal?    @db.Decimal(15, 2)
+  porcentaje    Decimal?    @db.Decimal(5, 2)
+  estado        String      @default("CORRECTO")
+  observaciones String?
+  createdAt     DateTime    @default(now())
+
+  @@map("detalles_comparacion")
+}
+
+model DetalleComparacionGalpon {
+  id            String      @id @default(uuid())
+  comparacionId String
+  comparacion   Comparacion @relation(fields: [comparacionId], references: [id], onDelete: Cascade)
+  galponId      String
+  galpon        Galpon      @relation(fields: [galponId], references: [id])
+  campo         String
+  valorOcr      Decimal?    @db.Decimal(15, 2)
+  valorExcel    Decimal?    @db.Decimal(15, 2)
+  diferencia    Decimal?    @db.Decimal(15, 2)
+  estado        String      @default("CORRECTO")
+  observaciones String?
+  createdAt     DateTime    @default(now())
+
+  @@map("detalles_comparacion_galpon")
+}
+
+model Conciliacion {
+  id            String             @id @default(uuid())
+  fecha         DateTime           @db.Date
+  estado        EstadoConciliacion @default(PENDIENTE)
+  aprobadoPorId String?
+  aprobadoPor   Usuario?           @relation(fields: [aprobadoPorId], references: [id])
+  aprobadoEn    DateTime?
+  observaciones String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  detalles DetalleConciliacion[]
+
+  @@unique([fecha])
+  @@map("conciliaciones")
+}
+
+model DetalleConciliacion {
+  id             String       @id @default(uuid())
+  conciliacionId String
+  conciliacion   Conciliacion @relation(fields: [conciliacionId], references: [id], onDelete: Cascade)
+  comparacionId  String?
+  comparacion    Comparacion? @relation(fields: [comparacionId], references: [id])
+  concepto       String
+  valorImagen    Decimal?     @db.Decimal(15, 2)
+  valorExcel     Decimal?     @db.Decimal(15, 2)
+  valorSistema   Decimal?     @db.Decimal(15, 2)
+  diferencia     Decimal?     @db.Decimal(15, 2)
+  estado         String       @default("CORRECTO")
+  observaciones  String?
+  createdAt      DateTime     @default(now())
+
+  @@map("detalles_conciliacion")
+}
+
+model InventarioGallina {
+  id            String   @id @default(uuid())
+  galponId      String
+  galpon        Galpon   @relation(fields: [galponId], references: [id])
+  fecha         DateTime @db.Date
+  saldoInicial  Int      @default(0)
+  entradas      Int      @default(0)
+  mortalidad    Int      @default(0)
+  ventas        Int      @default(0)
+  traslados     Int      @default(0)
+  saldoFinal    Int      @default(0)
+  observaciones String?
+  createdAt     DateTime @default(now())
+
+  @@unique([galponId, fecha])
+  @@map("inventario_gallinas")
+}
+
+model InventarioHuevo {
+  id            String    @id @default(uuid())
+  tipoHuevoId   String
+  tipoHuevo     TipoHuevo @relation(fields: [tipoHuevoId], references: [id])
+  fecha         DateTime  @db.Date
+  saldoInicial  Int       @default(0)
+  produccion    Int       @default(0)
+  ventas        Int       @default(0)
+  perdidas      Int       @default(0)
+  consumo       Int       @default(0)
+  saldoFinal    Int       @default(0)
+  observaciones String?
+  createdAt     DateTime  @default(now())
+
+  @@unique([tipoHuevoId, fecha])
+  @@map("inventario_huevos")
+}
+
+model InventarioAlimento {
+  id                 String   @id @default(uuid())
+  galponId           String
+  galpon             Galpon   @relation(fields: [galponId], references: [id])
+  fecha              DateTime @db.Date
+  saldoInicialKg     Decimal  @default(0) @db.Decimal(12, 2)
+  entradasKg         Decimal  @default(0) @db.Decimal(12, 2)
+  consumoKg          Decimal  @default(0) @db.Decimal(12, 2)
+  saldoFinalKg       Decimal  @default(0) @db.Decimal(12, 2)
+  saldoInicialBultos Int      @default(0)
+  entradasBultos     Int      @default(0)
+  consumoBultos      Int      @default(0)
+  saldoFinalBultos   Int      @default(0)
+  factorConversion   Decimal  @default(50) @db.Decimal(5, 2)
+  observaciones      String?
+  createdAt          DateTime @default(now())
+
+  @@unique([galponId, fecha])
+  @@map("inventario_alimento")
+}
+
+model InventarioBandeja {
+  id            String      @id @default(uuid())
+  galponId      String
+  galpon        Galpon      @relation(fields: [galponId], references: [id])
+  fecha         DateTime    @db.Date
+  tipo          TipoBandeja
+  entradas      Int         @default(0)
+  salidas       Int         @default(0)
+  saldoAnterior Int         @default(0)
+  saldoBodega   Int         @default(0)
+  observaciones String?
+  createdAt     DateTime    @default(now())
+
+  @@unique([galponId, fecha, tipo])
+  @@map("inventario_bandejas")
+}
+
+model InventarioBandejaReporte {
+  id            String        @id @default(uuid())
+  reporteId     String
+  reporte       ReporteDiario @relation(fields: [reporteId], references: [id], onDelete: Cascade)
+  tipo          TipoBandeja
+  entradas      Int           @default(0)
+  salidas       Int           @default(0)
+  saldoAnterior Int           @default(0)
+  saldoBodega   Int           @default(0)
+  createdAt     DateTime      @default(now())
+
+  @@unique([reporteId, tipo])
+  @@map("inventario_bandejas_reporte")
+}
+
+model Auditoria {
+  id        String   @id @default(uuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id])
+  accion    String
+  entidad   String
+  entidadId String?
+  cambios   Json?
+  ip        String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([usuarioId])
+  @@index([entidad, entidadId])
+  @@index([createdAt])
+  @@map("auditorias")
+}
+
+model CategoriaCosto {
+  id          String    @id @default(uuid())
+  nombre      String    @unique
+  descripcion String?
+  tipo        TipoCosto
+  activo      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  costos CostoDirecto[]
+
+  @@map("categorias_costo")
+}
+
+model CostoDirecto {
+  id               String         @id @default(uuid())
+  categoriaId      String
+  categoria        CategoriaCosto @relation(fields: [categoriaId], references: [id])
+  descripcion      String
+  monto            Decimal        @db.Decimal(12, 2)
+  fecha            DateTime       @db.Date
+  fechaVencimiento DateTime?
+  estado           EstadoCosto    @default(PENDIENTE)
+  comprobanteUrl   String?
+  observaciones    String?
+  creadoPorId      String
+  creadoPor        Usuario        @relation(fields: [creadoPorId], references: [id])
+  galponId         String?
+  galpon           Galpon?        @relation(fields: [galponId], references: [id])
+  aprobadoPorId    String?
+  aprobadoEn       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  @@map("costos_directos")
+}
+
+model GastoFijo {
+  id             String    @id @default(uuid())
+  concepto       String
+  monto          Decimal   @db.Decimal(12, 2)
+  recurrencia    String    @default("MENSUAL")
+  diaVencimiento Int?
+  fechaInicio    DateTime
+  fechaFin       DateTime?
+  activo         Boolean   @default(true)
+  observaciones  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@map("gastos_fijos")
+}
