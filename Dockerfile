@@ -2,12 +2,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-COPY prisma ./prisma/
+COPY apps/backend/package.json apps/backend/package-lock.json* ./
+COPY apps/backend/prisma ./prisma/
 
 RUN npm install
 
-COPY . .
+COPY apps/backend/ .
 
 RUN npx prisma generate
 RUN npm run build
