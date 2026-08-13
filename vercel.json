@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm install --prefix apps/frontend",
-  "buildCommand": "npm run build --prefix apps/frontend",
-  "framework": "nextjs"
+  "framework": "nextjs",
+  "installCommand": "npm install",
+  "buildCommand": "npx turbo build --filter=avicola-frontend"
 }
