@@ -23,8 +23,12 @@ export class ReconciliationController {
 
   @Get()
   @ApiOperation({ summary: 'Listar conciliaciones' })
-  findAll(@Query('page') page = 1, @Query('limit') limit = 20) {
-    return this.reconciliationService.findAll({ page: +page, limit: +limit });
+  findAll(
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+    @Query('estado') estado?: string,
+  ) {
+    return this.reconciliationService.findAll({ page: +page, limit: +limit }, { estado });
   }
 
   @Get(':id')
@@ -43,7 +47,14 @@ export class ReconciliationController {
   @Post(':id/reject')
   @Roles(Rol.CONTADOR, Rol.ADMINISTRADOR)
   @ApiOperation({ summary: 'Rechazar conciliación' })
-  reject(@Param('id') id: string, @Body('observaciones') observaciones: string) {
-    return this.reconciliationService.reject(id, observaciones);
+  reject(@Param('id') id: string, @Body('observaciones') observaciones: string, @CurrentUser() user: any) {
+    return this.reconciliationService.reject(id, observaciones, user.id);
+  }
+
+  @Post(':id/request-correction')
+  @Roles(Rol.CONTADOR, Rol.ADMINISTRADOR)
+  @ApiOperation({ summary: 'Solicitar corrección de conciliación' })
+  requestCorrection(@Param('id') id: string, @Body('observaciones') observaciones: string, @CurrentUser() user: any) {
+    return this.reconciliationService.requestCorrection(id, observaciones, user.id);
   }
 }

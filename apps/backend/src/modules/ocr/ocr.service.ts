@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 import { FormatParser } from './parser/format.parser';
 import * as fs from 'fs';
-import * as path from 'path';
 
 @Injectable()
 export class OcrService {
@@ -14,14 +13,30 @@ export class OcrService {
   ) {}
 
   async processImage(filePath: string, usuarioId: string) {
+    let worker: any = null;
     try {
-      const { createWorker } = require('tesseract.js');
-      const worker = await createWorker('spa+eng');
+      const Tesseract = require('tesseract.js');
 
-      const { data: { text } } = await worker.recognize(filePath);
+      worker = await Tesseract.createWorker('spa+eng', 1, {
+        logger: (m: any) => {
+          if (m.status === 'recognizing text') {
+            this.logger.debug(`OCR progress: ${(m.progress * 100).toFixed(1)}%`);
+          }
+        },
+      });
+
+      await worker.setParameters({
+        tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.,;:/%()-/',
+        tessedit_pageseg_mode: Tesseract.PSM.SINGLE_BLOCK,
+      });
+
+      this.logger.log(`Procesando imagen: ${filePath}`);
+      const { data: { text, confidence } } = await worker.recognize(filePath);
       await worker.terminate();
+      worker = null;
 
-      this.logger.log('OCR completado, parseando datos...');
+      this.logger.log(`OCR completado. Confianza: ${confidence.toFixed(1)}%`);
+      this.logger.debug(`Texto extraído (${text.length} chars): ${text.substring(0, 200)}...`);
 
       const parsedData = this.formatParser.parse(text);
 
@@ -31,11 +46,17 @@ export class OcrService {
           galponeroId: usuarioId,
           estado: 'BORRADOR',
           fuente: 'OCR',
-          imagenUrl: filePath,
-          textoOcr: text,
-          datosOcr: parsedData,
           observaciones: parsedData.observaciones || '',
+          ocrData: {
+            create: {
+              imagenUrl: filePath,
+              textoOcr: text,
+              datosOcr: parsedData,
+              confianza: confidence,
+            },
+          },
         },
+        include: { ocrData: true },
       });
 
       if (parsedData.galpones && parsedData.galpones.length > 0) {
@@ -81,12 +102,24 @@ export class OcrService {
       return {
         reporte: savedReport,
         textoOriginal: text,
+        confianza: confidence,
         datosParseados: parsedData,
       };
     } catch (error) {
       this.logger.error('Error en OCR', error.stack);
+      if (worker) {
+        try { await worker.terminate(); } catch {}
+      }
       throw error;
     }
+  }
+
+  async cleanupFile(filePath: string) {
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+    } catch {}
   }
 
   getSupportedFields() {

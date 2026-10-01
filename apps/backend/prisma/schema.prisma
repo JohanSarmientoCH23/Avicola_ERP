@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================================
+// ENUMS
+// ============================================================
+
 enum Rol {
   ADMINISTRADOR
   CONTADOR
@@ -46,6 +50,7 @@ enum EstadoConciliacion {
   PENDIENTE
   APROBADA
   RECHAZADA
+  CORRECCION_SOLICITADA
 }
 
 enum TipoHuevoCodigo {
@@ -80,6 +85,22 @@ enum EstadoCosto {
   RECHAZADO
 }
 
+enum EstadoAprobacion {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
+enum FuenteReporte {
+  MANUAL
+  OCR
+  EXCEL
+}
+
+// ============================================================
+// MÓDULO: AUTENTICACIÓN Y USUARIOS
+// ============================================================
+
 model Usuario {
   id          String        @id @default(uuid())
   email       String        @unique
@@ -102,8 +123,31 @@ model Usuario {
   refreshTokens           RefreshToken[]
   recuperaciones          RecuperacionContrasena[]
   costosCreados           CostoDirecto[]
+  costosAprobaciones      CostoAprobacion[]
+  galponesAsignados       UsuarioGalpon[]
+  movimientosGallina      MovimientoGallina[]
+  movimientosHuevo        MovimientoHuevo[]
+  movimientosAlimento     MovimientoAlimento[]
+  movimientosBandeja      MovimientoBandeja[]
+  despachosCreados        Despacho[]       @relation("DespachosCreados")
+  despachosAprobaciones   DespachoAprobacion[]
+  permisosAsignados       PermisoUsuario[]
 
+  @@index([rol])
+  @@index([estado])
   @@map("usuarios")
+}
+
+model UsuarioGalpon {
+  id        String   @id @default(uuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  galponId  String
+  galpon    Galpon   @relation(fields: [galponId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([usuarioId, galponId])
+  @@map("usuario_galpon")
 }
 
 model RefreshToken {
@@ -114,6 +158,8 @@ model RefreshToken {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  @@index([usuarioId])
+  @@index([expiresAt])
   @@map("refresh_tokens")
 }
 
@@ -126,8 +172,60 @@ model RecuperacionContrasena {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  @@index([usuarioId])
+  @@index([expiresAt])
   @@map("recuperaciones_contrasena")
 }
+
+// ============================================================
+// MÓDULO: PERMISOS (Normalizado 4FN)
+// Separa permisos por rol vs permisos por usuario individual
+// ============================================================
+
+model Permiso {
+  id          String @id @default(uuid())
+  codigo      String @unique
+  descripcion String
+  modulo      String
+  createdAt   DateTime @default(now())
+
+  roles       RolPermiso[]
+  usuarios    PermisoUsuario[]
+
+  @@index([modulo])
+  @@map("permisos")
+}
+
+model RolPermiso {
+  id        String   @id @default(uuid())
+  rol       Rol
+  permisoId String
+  permiso   Permiso  @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([rol, permisoId])
+  @@index([rol])
+  @@index([permisoId])
+  @@map("rol_permisos")
+}
+
+model PermisoUsuario {
+  id        String   @id @default(uuid())
+  usuarioId String
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  permisoId String
+  permiso   Permiso  @relation(fields: [permisoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([usuarioId, permisoId])
+  @@index([usuarioId])
+  @@index([permisoId])
+  @@map("permisos_usuario")
+}
+
+// ============================================================
+// MÓDULO: PRODUCCIÓN (Lotes y Galpones)
+// ============================================================
 
 model Lote {
   id          String    @id @default(uuid())
@@ -156,15 +254,23 @@ model Galpon {
   createdAt        DateTime     @default(now())
   updatedAt        DateTime     @updatedAt
 
-  detallesReporte     DetalleGalpon[]
-  inventariosGallina  InventarioGallina[]
-  inventariosAlimento InventarioAlimento[]
-  inventariosBandeja  InventarioBandeja[]
-  comparacionDetalles DetalleComparacionGalpon[]
-  CostoDirecto        CostoDirecto[]
+  detallesReporte         DetalleGalpon[]
+  inventariosGallina      InventarioGallina[]
+  inventariosAlimento     InventarioAlimento[]
+  inventariosBandeja      InventarioBandeja[]
+  comparacionDetalles     DetalleComparacionGalpon[]
+  costosDirectos          CostoDirecto[]
+  usuariosAsignados       UsuarioGalpon[]
+  movimientosGallina      MovimientoGallina[]
+  movimientosAlimento     MovimientoAlimento[]
+  movimientosBandeja      MovimientoBandeja[]
 
   @@map("galpones")
 }
+
+// ============================================================
+// MÓDULO: CATÁLOGOS
+// ============================================================
 
 model TipoHuevo {
   id        String          @id @default(uuid())
@@ -177,11 +283,92 @@ model TipoHuevo {
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
 
-  producciones      ProduccionHuevo[]
-  inventariosHuevos InventarioHuevo[]
+  producciones         ProduccionHuevo[]
+  inventariosHuevos    InventarioHuevo[]
+  movimientosHuevo     MovimientoHuevo[]
+  despachoDetalles     DespachoDetalle[]
 
   @@map("tipos_huevo")
 }
+
+model Cliente {
+  id          String   @id @default(uuid())
+  razonSocial String
+  ruc         String?  @unique
+  direccion   String?
+  telefono    String?
+  email       String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  despachos Despacho[]
+
+  @@map("clientes")
+}
+
+model CategoriaCosto {
+  id          String    @id @default(uuid())
+  nombre      String    @unique
+  descripcion String?
+  tipo        TipoCosto
+  activo      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  conceptos ConceptoCosto[]
+
+  @@map("categorias_costo")
+}
+
+model ConceptoCosto {
+  id            String         @id @default(uuid())
+  categoriaId   String
+  categoria     CategoriaCosto @relation(fields: [categoriaId], references: [id])
+  nombre        String
+  descripcion   String?
+  unidadMedida  String?
+  activo        Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  costos CostoDirecto[]
+
+  @@unique([categoriaId, nombre])
+  @@map("conceptos_costo")
+}
+
+model ConceptoGasto {
+  id          String   @id @default(uuid())
+  nombre      String   @unique
+  descripcion String?
+  categoria   String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  gastos GastoFijo[]
+
+  @@map("conceptos_gasto")
+}
+
+model ConceptoConciliacion {
+  id          String   @id @default(uuid())
+  nombre      String   @unique
+  descripcion String?
+  modulo      String?
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  detalles DetalleConciliacion[]
+
+  @@map("conceptos_conciliacion")
+}
+
+// ============================================================
+// MÓDULO: REPORTES DIARIOS
+// ============================================================
 
 model ReporteDiario {
   id             String        @id @default(uuid())
@@ -190,21 +377,37 @@ model ReporteDiario {
   galponero      Usuario       @relation(fields: [galponeroId], references: [id])
   estado         EstadoReporte @default(BORRADOR)
   observaciones  String?
-  imagenUrl      String?
-  imagenMinioKey String?
-  textoOcr       String?
-  datosOcr       Json?
-  fuente         String        @default("MANUAL")
+  fuente         FuenteReporte @default(MANUAL)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
 
+  ocrData           ReporteOcrData?
   detallesGalpon     DetalleGalpon[]
   produccionesHuevo  ProduccionHuevo[]
   inventarioBandejas InventarioBandejaReporte[]
   comparacionesOcr   Comparacion[]
 
   @@unique([fecha, galponeroId])
+  @@index([fecha])
+  @@index([estado])
+  @@index([fuente])
   @@map("reportes_diarios")
+}
+
+model ReporteOcrData {
+  id            String        @id @default(uuid())
+  reporteId     String        @unique
+  reporte       ReporteDiario @relation(fields: [reporteId], references: [id], onDelete: Cascade)
+  imagenUrl     String?
+  imagenMinioKey String?
+  textoOcr      String?
+  datosOcr      Json?
+  confianza     Decimal?      @db.Decimal(5, 2)
+  procesadoEn   DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("reportes_ocr_data")
 }
 
 model DetalleGalpon {
@@ -222,6 +425,7 @@ model DetalleGalpon {
   updatedAt       DateTime      @updatedAt
 
   @@unique([reporteId, galponId])
+  @@index([galponId])
   @@map("detalles_galpon")
 }
 
@@ -239,8 +443,13 @@ model ProduccionHuevo {
   updatedAt   DateTime      @updatedAt
 
   @@unique([reporteId, tipoHuevoId])
+  @@index([tipoHuevoId])
   @@map("producciones_huevo")
 }
+
+// ============================================================
+// MÓDULO: REPORTES EXCEL Y COMPARACIÓN
+// ============================================================
 
 model ReporteExcel {
   id              String   @id @default(uuid())
@@ -282,6 +491,9 @@ model Comparacion {
   detallesGalpon      DetalleComparacionGalpon[]
   conciliacionDetalle DetalleConciliacion[]
 
+  @@index([fecha])
+  @@index([estado])
+  @@index([creadoPorId])
   @@map("comparaciones")
 }
 
@@ -318,6 +530,10 @@ model DetalleComparacionGalpon {
   @@map("detalles_comparacion_galpon")
 }
 
+// ============================================================
+// MÓDULO: CONCILIACIÓN
+// ============================================================
+
 model Conciliacion {
   id            String             @id @default(uuid())
   fecha         DateTime           @db.Date
@@ -341,7 +557,8 @@ model DetalleConciliacion {
   conciliacion   Conciliacion @relation(fields: [conciliacionId], references: [id], onDelete: Cascade)
   comparacionId  String?
   comparacion    Comparacion? @relation(fields: [comparacionId], references: [id])
-  concepto       String
+  conceptoId     String
+  concepto       ConceptoConciliacion @relation(fields: [conceptoId], references: [id])
   valorImagen    Decimal?     @db.Decimal(15, 2)
   valorExcel     Decimal?     @db.Decimal(15, 2)
   valorSistema   Decimal?     @db.Decimal(15, 2)
@@ -352,6 +569,10 @@ model DetalleConciliacion {
 
   @@map("detalles_conciliacion")
 }
+
+// ============================================================
+// MÓDULO: INVENTARIOS
+// ============================================================
 
 model InventarioGallina {
   id            String   @id @default(uuid())
@@ -390,21 +611,18 @@ model InventarioHuevo {
 }
 
 model InventarioAlimento {
-  id                 String   @id @default(uuid())
-  galponId           String
-  galpon             Galpon   @relation(fields: [galponId], references: [id])
-  fecha              DateTime @db.Date
-  saldoInicialKg     Decimal  @default(0) @db.Decimal(12, 2)
-  entradasKg         Decimal  @default(0) @db.Decimal(12, 2)
-  consumoKg          Decimal  @default(0) @db.Decimal(12, 2)
-  saldoFinalKg       Decimal  @default(0) @db.Decimal(12, 2)
-  saldoInicialBultos Int      @default(0)
-  entradasBultos     Int      @default(0)
-  consumoBultos      Int      @default(0)
-  saldoFinalBultos   Int      @default(0)
-  factorConversion   Decimal  @default(50) @db.Decimal(5, 2)
-  observaciones      String?
-  createdAt          DateTime @default(now())
+  id             String   @id @default(uuid())
+  galponId       String
+  galpon         Galpon   @relation(fields: [galponId], references: [id])
+  siloId         String?
+  silo           Silo?    @relation(fields: [siloId], references: [id])
+  fecha          DateTime @db.Date
+  saldoInicialKg Decimal  @default(0) @db.Decimal(12, 2)
+  entradasKg     Decimal  @default(0) @db.Decimal(12, 2)
+  consumoKg      Decimal  @default(0) @db.Decimal(12, 2)
+  saldoFinalKg   Decimal  @default(0) @db.Decimal(12, 2)
+  observaciones  String?
+  createdAt      DateTime @default(now())
 
   @@unique([galponId, fecha])
   @@map("inventario_alimento")
@@ -442,6 +660,248 @@ model InventarioBandejaReporte {
   @@map("inventario_bandejas_reporte")
 }
 
+// ============================================================
+// MÓDULO: MOVIMIENTOS DE INVENTARIO (4FN - Tablas separadas por tipo)
+// Cada tipo de producto tiene su propia tabla de movimientos
+// eliminando dependencias multivaloradas
+// ============================================================
+
+model MovimientoGallina {
+  id             String   @id @default(uuid())
+  fecha          DateTime @db.Date
+  tipoMovimiento String
+  cantidad       Int      @default(0)
+  galponId       String
+  galpon         Galpon   @relation(fields: [galponId], references: [id])
+  origen         String?
+  destino        String?
+  referencia     String?
+  usuarioId      String
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
+  observacion    String?
+  createdAt      DateTime @default(now())
+
+  @@index([fecha])
+  @@index([galponId])
+  @@index([usuarioId])
+  @@map("movimientos_gallina")
+}
+
+model MovimientoHuevo {
+  id             String   @id @default(uuid())
+  fecha          DateTime @db.Date
+  tipoMovimiento String
+  tipoHuevoId    String
+  tipoHuevo      TipoHuevo @relation(fields: [tipoHuevoId], references: [id])
+  cantidad       Int      @default(0)
+  origen         String?
+  destino        String?
+  referencia     String?
+  usuarioId      String
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
+  observacion    String?
+  createdAt      DateTime @default(now())
+
+  @@index([fecha])
+  @@index([tipoHuevoId])
+  @@index([usuarioId])
+  @@map("movimientos_huevo")
+}
+
+model MovimientoAlimento {
+  id             String   @id @default(uuid())
+  fecha          DateTime @db.Date
+  tipoMovimiento String
+  cantidadKg     Decimal  @default(0) @db.Decimal(12, 2)
+  galponId       String?
+  galpon         Galpon?  @relation(fields: [galponId], references: [id])
+  siloId         String?
+  silo           Silo?    @relation(fields: [siloId], references: [id])
+  origen         String?
+  destino        String?
+  referencia     String?
+  usuarioId      String
+  usuario        Usuario  @relation(fields: [usuarioId], references: [id])
+  observacion    String?
+  createdAt      DateTime @default(now())
+
+  @@index([fecha])
+  @@index([galponId])
+  @@index([siloId])
+  @@index([usuarioId])
+  @@map("movimientos_alimento")
+}
+
+model MovimientoBandeja {
+  id             String      @id @default(uuid())
+  fecha          DateTime    @db.Date
+  tipoMovimiento String
+  tipo           TipoBandeja
+  cantidad       Int         @default(0)
+  galponId       String?
+  galpon         Galpon?     @relation(fields: [galponId], references: [id])
+  origen         String?
+  destino        String?
+  referencia     String?
+  usuarioId      String
+  usuario        Usuario     @relation(fields: [usuarioId], references: [id])
+  observacion    String?
+  createdAt      DateTime    @default(now())
+
+  @@index([fecha])
+  @@index([galponId])
+  @@index([usuarioId])
+  @@map("movimientos_bandeja")
+}
+
+// ============================================================
+// MÓDULO: COSTOS
+// ============================================================
+
+model CostoDirecto {
+  id               String         @id @default(uuid())
+  conceptoId       String
+  concepto         ConceptoCosto  @relation(fields: [conceptoId], references: [id])
+  descripcion      String
+  monto            Decimal        @db.Decimal(12, 2)
+  fecha            DateTime       @db.Date
+  fechaVencimiento DateTime?
+  comprobanteUrl   String?
+  observaciones    String?
+  creadoPorId      String
+  creadoPor        Usuario        @relation(fields: [creadoPorId], references: [id])
+  galponId         String?
+  galpon           Galpon?        @relation(fields: [galponId], references: [id])
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  aprobacion CostoAprobacion?
+
+  @@index([fecha])
+  @@index([galponId])
+  @@index([creadoPorId])
+  @@index([conceptoId])
+  @@map("costos_directos")
+}
+
+model CostoAprobacion {
+  id            String      @id @default(uuid())
+  costoId       String      @unique
+  costo         CostoDirecto @relation(fields: [costoId], references: [id], onDelete: Cascade)
+  estado        EstadoCosto @default(PENDIENTE)
+  aprobadoPorId String?
+  aprobadoPor   Usuario?    @relation(fields: [aprobadoPorId], references: [id])
+  aprobadoEn    DateTime?
+  observaciones String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@index([estado])
+  @@index([aprobadoPorId])
+  @@map("costos_aprobaciones")
+}
+
+model GastoFijo {
+  id             String    @id @default(uuid())
+  conceptoId     String
+  concepto       ConceptoGasto @relation(fields: [conceptoId], references: [id])
+  monto          Decimal   @db.Decimal(12, 2)
+  recurrencia    String    @default("MENSUAL")
+  diaVencimiento Int?
+  fechaInicio    DateTime
+  fechaFin       DateTime?
+  activo         Boolean   @default(true)
+  observaciones  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([conceptoId])
+  @@map("gastos_fijos")
+}
+
+// ============================================================
+// MÓDULO: DESPACHOS (Normalizado 3FN con catálogo de clientes)
+// ============================================================
+
+model Despacho {
+  id            String   @id @default(uuid())
+  fecha         DateTime @db.Date
+  clienteId     String
+  cliente       Cliente  @relation(fields: [clienteId], references: [id])
+  guiaRemision  String?
+  observaciones String?
+  estado        String   @default("PENDIENTE")
+  creadoPorId   String
+  creadoPor     Usuario  @relation("DespachosCreados", fields: [creadoPorId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  detalles    DespachoDetalle[]
+  aprobacion  DespachoAprobacion?
+
+  @@index([fecha])
+  @@index([estado])
+  @@index([creadoPorId])
+  @@index([clienteId])
+  @@map("despachos")
+}
+
+model DespachoAprobacion {
+  id            String    @id @default(uuid())
+  despachoId    String    @unique
+  despacho      Despacho  @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+  estado        String    @default("PENDIENTE")
+  aprobadoPorId String?
+  aprobadoPor   Usuario?  @relation(fields: [aprobadoPorId], references: [id])
+  aprobadoEn    DateTime?
+  observaciones String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([estado])
+  @@index([aprobadoPorId])
+  @@map("despachos_aprobaciones")
+}
+
+model DespachoDetalle {
+  id           String    @id @default(uuid())
+  despachoId   String
+  despacho     Despacho  @relation(fields: [despachoId], references: [id], onDelete: Cascade)
+  tipoHuevoId  String
+  tipoHuevo    TipoHuevo @relation(fields: [tipoHuevoId], references: [id])
+  cantidad     Int       @default(0)
+  precioUnit   Decimal?  @db.Decimal(10, 2)
+  pesoTotal    Decimal?  @db.Decimal(10, 2)
+  observacion  String?
+  createdAt    DateTime  @default(now())
+
+  @@map("despacho_detalles")
+}
+
+// ============================================================
+// MÓDULO: ALMACÉN (Silos)
+// ============================================================
+
+model Silo {
+  id          String   @id @default(uuid())
+  codigo      String   @unique
+  capacidad   Decimal  @db.Decimal(10, 2)
+  unidad      String   @default("KG")
+  estado      String   @default("ACTIVO")
+  descripcion String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  inventarios         InventarioAlimento[]
+  movimientosAlimento MovimientoAlimento[]
+
+  @@map("silos")
+}
+
+// ============================================================
+// MÓDULO: AUDITORÍA
+// ============================================================
+
 model Auditoria {
   id        String   @id @default(uuid())
   usuarioId String
@@ -458,57 +918,4 @@ model Auditoria {
   @@index([entidad, entidadId])
   @@index([createdAt])
   @@map("auditorias")
-}
-
-model CategoriaCosto {
-  id          String    @id @default(uuid())
-  nombre      String    @unique
-  descripcion String?
-  tipo        TipoCosto
-  activo      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-
-  costos CostoDirecto[]
-
-  @@map("categorias_costo")
-}
-
-model CostoDirecto {
-  id               String         @id @default(uuid())
-  categoriaId      String
-  categoria        CategoriaCosto @relation(fields: [categoriaId], references: [id])
-  descripcion      String
-  monto            Decimal        @db.Decimal(12, 2)
-  fecha            DateTime       @db.Date
-  fechaVencimiento DateTime?
-  estado           EstadoCosto    @default(PENDIENTE)
-  comprobanteUrl   String?
-  observaciones    String?
-  creadoPorId      String
-  creadoPor        Usuario        @relation(fields: [creadoPorId], references: [id])
-  galponId         String?
-  galpon           Galpon?        @relation(fields: [galponId], references: [id])
-  aprobadoPorId    String?
-  aprobadoEn       DateTime?
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-
-  @@map("costos_directos")
-}
-
-model GastoFijo {
-  id             String    @id @default(uuid())
-  concepto       String
-  monto          Decimal   @db.Decimal(12, 2)
-  recurrencia    String    @default("MENSUAL")
-  diaVencimiento Int?
-  fechaInicio    DateTime
-  fechaFin       DateTime?
-  activo         Boolean   @default(true)
-  observaciones  String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-
-  @@map("gastos_fijos")
 }

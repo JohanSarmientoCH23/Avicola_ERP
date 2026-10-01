@@ -43,15 +43,28 @@ export class ComparisonService {
     const comparacionesGalpon: any[] = [];
 
     for (const detalle of reporteOcr.detallesGalpon) {
-      const galponExcel = excelData?.galpones?.find(
-        (g: any) => g.codigo === detalle.galpon.codigo
+      const galponesExcel = excelData?.galpones || excelData?.detalles || excelData?.data || [];
+      const galponExcel = galponesExcel.find(
+        (g: any) => {
+          const codigoExcel = String(g.codigo || g.galpon || g.galpón || '').toUpperCase().trim();
+          const codigoOcr = detalle.galpon.codigo.toUpperCase().trim();
+          return codigoExcel === codigoOcr;
+        }
       );
 
+      const getFieldValue = (obj: any, ...keys: string[]): number | undefined => {
+        if (!obj) return undefined;
+        for (const key of keys) {
+          if (obj[key] !== undefined && obj[key] !== null) return Number(obj[key]);
+        }
+        return undefined;
+      };
+
       const campos = [
-        { campo: 'mortalidad', valorOcr: detalle.mortalidad, valorExcel: galponExcel?.mortalidad },
-        { campo: 'produccion', valorOcr: detalle.produccion, valorExcel: galponExcel?.produccion },
-        { campo: 'alimentoConsumo', valorOcr: Number(detalle.alimentoConsumo), valorExcel: galponExcel?.consumo },
-        { campo: 'alimentoEntrada', valorOcr: Number(detalle.alimentoEntrada), valorExcel: galponExcel?.alimentoEntrada },
+        { campo: 'mortalidad', valorOcr: detalle.mortalidad, valorExcel: getFieldValue(galponExcel, 'mortalidad', 'muertes', 'mort') },
+        { campo: 'produccion', valorOcr: detalle.produccion, valorExcel: getFieldValue(galponExcel, 'produccion', 'producción', 'prod') },
+        { campo: 'alimentoConsumo', valorOcr: Number(detalle.alimentoConsumo), valorExcel: getFieldValue(galponExcel, 'consumo', 'consumoAlimento', 'alimentoConsumo', 'consumo_alimento') },
+        { campo: 'alimentoEntrada', valorOcr: Number(detalle.alimentoEntrada), valorExcel: getFieldValue(galponExcel, 'alimentoEntrada', 'entrada', 'entradaAlimento', 'alimento_entrada') },
       ];
 
       for (const campo of campos) {
@@ -92,14 +105,27 @@ export class ComparisonService {
     }
 
     const tiposHuevoOcr = reporteOcr.produccionesHuevo;
+    const excelHuevos = excelData?.huevos || excelData?.clasificacion || [];
 
     for (const prod of tiposHuevoOcr) {
       totalCampos++;
       const valOcr = prod.cantidad;
-      const valExcel = 0;
+
+      const huevoExcel = excelHuevos.find(
+        (h: any) => {
+          const codigoNormalizado = String(h.codigo || h.tipo || '').toUpperCase().replace(/[\.\s]/g, '');
+          const codigoOcr = prod.tipoHuevo.codigo.toUpperCase().replace(/[\.\s]/g, '');
+          return codigoNormalizado === codigoOcr;
+        }
+      );
+      const valExcel = huevoExcel ? Number(huevoExcel.cantidad || huevoExcel.valor || 0) : 0;
+
       const diferencia = valOcr - valExcel;
+      const porcentaje = valExcel > 0 ? (Math.abs(diferencia) / valExcel) * 100 : 0;
+
       let estado = 'CORRECTO';
-      if (diferencia !== 0) estado = 'REVISAR';
+      if (Math.abs(diferencia) > 0) estado = 'REVISAR';
+      if (Math.abs(diferencia) > 50 || porcentaje > 5) estado = 'ERROR';
 
       if (estado === 'CORRECTO') camposCorrectos++;
       else camposConError++;

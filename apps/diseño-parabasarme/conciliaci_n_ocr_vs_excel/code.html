@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>AVÍCOLA ERP - Agro-Industrial Layer Management</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { colors: { 'secondary-fixed': '#6ffbbe', 'primary-fixed-dim': '#a0d1bb', 'secondary': '#006c49', 'on-secondary-fixed-variant': '#005236', 'error': '#ba1a1a', 'surface-variant': '#dae2fd', 'on-surface-variant': '#414944', 'on-tertiary-container': '#e49200', 'outline': '#717974', 'secondary-fixed-dim': '#4edea3', 'on-primary-fixed': '#002116', 'on-secondary': '#ffffff', 'inverse-primary': '#a0d1bb', 'primary-container': '#114232', 'primary-fixed': '#bbedd6', 'on-tertiary': '#ffffff', 'error-container': '#ffdad6', 'outline-variant': '#c0c8c3', 'on-secondary-container': '#00714d', 'surface-container-lowest': '#ffffff', 'surface-container-highest': '#dae2fd', 'on-background': '#131b2e', 'on-primary': '#ffffff', 'surface-container': '#eaedff', 'surface-bright': '#faf8ff', 'surface-dim': '#d2d9f4', 'on-primary-container': '#7eae99', 'inverse-on-surface': '#eef0ff', 'secondary-container': '#6cf8bb', 'on-error-container': '#93000a', 'on-tertiary-fixed': '#2a1700', 'background': '#faf8ff', 'primary': '#002b1e', 'tertiary-fixed': '#ffddb8', 'surface-tint': '#396755', 'surface-container-high': '#e2e7ff', 'on-secondary-fixed': '#002113', 'inverse-surface': '#283044', 'on-error': '#ffffff', 'tertiary-container': '#543300', 'surface': '#faf8ff', 'on-primary-fixed-variant': '#204f3e', 'tertiary': '#372000', 'tertiary-fixed-dim': '#ffb95f', 'on-surface': '#131b2e', 'surface-container-low': '#f2f3ff', 'on-tertiary-fixed-variant': '#653e00' }, borderRadius: { 'DEFAULT': '0.125rem', 'lg': '0.25rem', 'xl': '0.5rem', 'full': '0.75rem' }, spacing: { 'space-2xl': '2rem', 'space-3xl': '3rem', 'gutter-desktop': '1.25rem', 'space-sm': '0.5rem', 'space-lg': '1.25rem', 'gutter-mobile': '0.75rem', 'space-xl': '1.5rem', 'space-2xs': '0.125rem', 'space-base': '1rem', 'space-xs': '0.25rem', 'margin-desktop': '1.5rem', 'margin-mobile': '1rem', 'space-md': '0.75rem' }, fontFamily: { 'label-data-md': ['JetBrains Mono'], 'headline-md': ['Inter'], 'headline-lg-mobile': ['Inter'], 'body-lg': ['Inter'], 'headline-xl': ['Inter'], 'body-sm': ['Inter'], 'label-data-lg': ['JetBrains Mono'], 'label-ui': ['Inter'], 'headline-lg': ['Inter'], 'body-md': ['Inter'], 'label-data-sm': ['JetBrains Mono'] }, fontSize: { 'label-data-md': ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0em', fontWeight: '500' }], 'headline-md': ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '-0.015em', fontWeight: '600' }], 'headline-lg-mobile': ['1.375rem', { lineHeight: '1.75rem', letterSpacing: '-0.015em', fontWeight: '600' }], 'body-lg': ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }], 'headline-xl': ['2.25rem', { lineHeight: '2.75rem', letterSpacing: '-0.025em', fontWeight: '700' }], 'body-sm': ['0.75rem', { lineHeight: '1rem', fontWeight: '400' }], 'label-data-lg': ['1.125rem', { lineHeight: '1.5rem', letterSpacing: '-0.01em', fontWeight: '600' }], 'label-ui': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.04em', fontWeight: '600' }], 'headline-lg': ['1.75rem', { lineHeight: '2.25rem', letterSpacing: '-0.02em', fontWeight: '600' }], 'body-md': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }], 'label-data-sm': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.02em', fontWeight: '500' }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-hidden"><div class="flex flex-col h-full"><div class="h-16 px-space-lg flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center overflow-hidden flex-shrink-0"><span class="material-symbols-outlined text-secondary-container text-xl">egg</span></div><div class="flex flex-col"><span class="font-headline-md text-body-lg text-primary tracking-tight font-bold leading-none">AVÍCOLA ERP</span><span class="font-label-data-sm text-[10px] text-secondary font-semibold uppercase tracking-wider mt-space-2xs">AGRO-PRO v2.4</span></div></div><button aria-label="Colapsar menú lateral" class="text-on-surface-variant hover:text-on-surface p-space-xs rounded-lg hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-xl">keyboard_double_arrow_left</span></button></div><div class="flex-1 overflow-y-auto px-space-md py-space-sm space-y-space-md"><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Principal</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="dashboard" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">dashboard</span><span class="font-body-md text-body-md truncate">Dashboard Operativo</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Operaciones</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="produccion" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">factory</span><span class="font-body-md text-body-md truncate">Producción</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="galpones" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">warehouse</span><span class="font-body-md text-body-md truncate">Galpones</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="aves" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">cruelty_free</span><span class="font-body-md text-body-md truncate">Aves y Lotes</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="alimento-silos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">grain</span><span class="font-body-md text-body-md truncate">Alimento &amp; Silos</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Inventarios</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="inventario-huevos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">egg</span><span class="font-body-md text-body-md truncate">Huevos Clasificados</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="inventario-alimento" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">inventory_2</span><span class="font-body-md text-body-md truncate">Alimento &amp; Materias</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="kardex" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">receipt_long</span><span class="font-body-md text-body-md truncate">Kardex General</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="despachos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">local_shipping</span><span class="font-body-md text-body-md truncate">Despachos &amp; Logística</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Validación &amp; IA</div><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg transition-colors bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]" data-path="ocr-vs-excel" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">document_scanner</span><span class="font-body-md text-body-md truncate">OCR vs Excel</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="conciliaciones" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">rule</span><span class="font-body-md text-body-md truncate">Conciliaciones</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="importaciones-excel" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">file_upload</span><span class="font-body-md text-body-md truncate">Importaciones Masivas</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Finanzas</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="costos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">payments</span><span class="font-body-md text-body-md truncate">Costos Operativos</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="gastos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">price_change</span><span class="font-body-md text-body-md truncate">Gastos e Insumos</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="reportes-financieros" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">monitoring</span><span class="font-body-md text-body-md truncate">Reportes Gerenciales</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Sistema</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="auditoria" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">history</span><span class="font-body-md text-body-md truncate">Auditoría de Cambios</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="usuarios-roles" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">manage_accounts</span><span class="font-body-md text-body-md truncate">Usuarios &amp; Permisos</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="configuracion" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">settings</span><span class="font-body-md text-body-md truncate">Parámetros Globales</span></a></nav></div><div class="p-space-md bg-surface-container-low"><div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest"><div class="flex items-center gap-space-sm overflow-hidden"><div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-headline-md text-body-sm font-semibold flex-shrink-0">JR</div><div class="flex flex-col min-w-0"><span class="font-headline-md text-body-sm font-semibold text-on-surface truncate">Johan Ramírez</span><span class="font-label-ui text-[10px] text-on-surface-variant truncate">CONTADOR / ADMIN</span><span class="font-label-data-sm text-[10px] text-secondary font-medium truncate">Llano Grande</span></div></div><div class="flex items-center gap-space-2xs flex-shrink-0"><button aria-label="Configuración personal" class="text-on-surface-variant hover:text-on-surface p-space-xs rounded hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-lg">tune</span></button><button aria-label="Cerrar sesión" class="text-error hover:text-on-error-container p-space-xs rounded hover:bg-error-container transition-colors" type="button"><span class="material-symbols-outlined text-lg">logout</span></button></div></div></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs font-body-sm"><span class="text-on-surface-variant font-medium">Producción</span><span class="material-symbols-outlined text-sm text-outline-variant">chevron_right</span><span class="text-primary font-semibold">Resumen Operativo</span></div><div class="relative flex items-center w-72"><span class="material-symbols-outlined absolute left-space-sm text-outline text-lg pointer-events-none">search</span><input class="w-full h-9 pl-9 pr-8 bg-surface-container-low rounded-lg text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container transition-colors" placeholder="Buscar lote, galpón, guía..." type="text"/><kbd class="absolute right-space-sm px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant font-label-data-sm text-[10px] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">/</kbd></div></div><div class="flex items-center gap-space-md"><div class="flex items-center bg-surface-container-low p-space-2xs rounded-lg"><button class="px-space-sm py-1 rounded text-body-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors" type="button">Hoy</button><button class="px-space-sm py-1 rounded text-body-sm font-semibold bg-surface-container-lowest text-primary shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors" type="button">7 Días</button><button class="px-space-sm py-1 rounded text-body-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors" type="button">30 Días</button><button class="px-space-sm py-1 rounded text-body-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-sm align-middle">date_range</span></button></div><div class="flex items-center gap-space-xs"><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-data-sm text-xs font-medium"><span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>3 alertas activas</div><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-data-sm text-xs font-medium"><span class="w-2 h-2 rounded-full bg-secondary"></span>Sincronizado</div></div><div class="relative"><button aria-label="Ver notificaciones" class="relative p-space-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-xl">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button></div><div class="flex items-center gap-space-xs pl-space-sm bg-surface-container-low hover:bg-surface-container py-1.5 px-space-md rounded-lg cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-lg">domain</span><div class="flex flex-col text-left"><span class="font-headline-md text-body-sm font-semibold text-on-surface leading-tight">Granja Llano Grande</span><span class="font-label-data-sm text-[10px] text-on-surface-variant leading-none">14 Galpones Activos</span></div><span class="material-symbols-outlined text-on-surface-variant text-sm ml-1">expand_more</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1WMgho3HM9U-cU1lpnOLfiaUtpnGe8Xy1WvLP4SVlYqQ2sA4M8LavNyCC2xirc8hQDAC-MP689evyOKLXagKsek0Ya1zzXDNKtLEevvKrIiz8AIApeok0BtiLnmbxVL9aQjIdV-ombhZZTpdEaRQYdpYs9Dd1p6AGTkCgNGg0Rda2-CwN7r4eVewXJxhWLPvDctiNDm_b27iozpusNuIiO3iBvpAmzH_u_fhUeM9uRbHHjT-tefKTclm-s"/></div></header><main class="relative pt-16 w-full px-space-lg bg-background min-h-screen"><div class="flex flex-col w-full pb-space-3xl space-y-space-xl">
+<!-- TOP HEADER / CONTEXT CONTROL BAR -->
+<header class="flex flex-col xl:flex-row xl:items-end justify-between gap-space-lg bg-surface-container-lowest p-space-xl rounded-xl shadow-sm">
+<div class="space-y-space-xs max-w-3xl">
+<!-- Breadcrumb -->
+<nav class="flex items-center gap-space-xs font-label-ui text-body-sm text-on-surface-variant uppercase tracking-wider">
+<span>Operaciones</span>
+<span class="material-symbols-outlined text-sm text-outline-variant">chevron_right</span>
+<span>Conciliaciones</span>
+<span class="material-symbols-outlined text-sm text-outline-variant">chevron_right</span>
+<span class="text-secondary font-label-data-sm font-semibold tracking-normal lowercase">lote-llano-grande-2026-09-03</span>
+</nav>
+<!-- Section Title & Subtitle -->
+<h1 class="font-headline-xl text-headline-xl text-primary tracking-tight">
+        Conciliación de Información
+      </h1>
+<p class="font-body-lg text-body-md text-on-surface-variant">
+        Comparación biométrica entre digitalización física (OCR) y hoja de cálculo digitada (Excel)
+      </p>
+<!-- Active Selection Pill & Metainfo -->
+<div class="flex flex-wrap items-center gap-space-sm pt-space-xs">
+<div class="inline-flex items-center gap-space-xs px-space-md py-1.5 rounded-lg bg-surface-container text-on-surface font-headline-md text-body-sm font-semibold">
+<span class="material-symbols-outlined text-secondary text-base">domain</span>
+<span>Galpón 1A - Lote 28 Semanas (03 Sep 2026)</span>
+<span class="material-symbols-outlined text-on-surface-variant text-sm cursor-pointer">arrow_drop_down</span>
+</div>
+<span class="font-label-data-sm text-on-surface-variant">ID Validación: <span class="text-primary font-semibold">#REC-20260903-G1A</span></span>
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span class="font-label-ui text-body-sm text-secondary font-medium">Turno Matutino</span>
+</div>
+</div>
+<!-- Action Toolbar -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<button class="inline-flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container font-headline-md text-body-sm font-medium shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-base">document_scanner</span>
+<span>Re-escanear Formato</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-md py-2 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container font-headline-md text-body-sm font-medium shadow-sm transition-colors" type="button">
+<span class="material-symbols-outlined text-base">picture_as_pdf</span>
+<span>Descargar Acta PDF</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-space-lg py-2 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-headline-md text-body-sm font-semibold shadow-md transition-all" type="button">
+<span class="material-symbols-outlined text-secondary-container text-lg">verified</span>
+<span>Aprobar Conciliación y Pasar a Kardex</span>
+</button>
+</div>
+</header>
+<!-- AUDIT METRICS & OCR CONFIDENCE BAR -->
+<section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-space-md">
+<!-- Total Fields -->
+<div class="flex flex-col justify-between p-space-md bg-surface-container-lowest rounded-xl shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-ui text-body-sm text-on-surface-variant uppercase">Campos Auditados</span>
+<span class="material-symbols-outlined text-outline text-lg">checklist_rtl</span>
+</div>
+<div class="mt-space-sm">
+<div class="font-label-data-lg text-headline-lg text-primary font-bold">18</div>
+<p class="font-label-data-sm text-on-surface-variant text-[11px] mt-1">100% matriz de recolección</p>
+</div>
+</div>
+<!-- Perfect Matches -->
+<div class="flex flex-col justify-between p-space-md bg-surface-container-lowest rounded-xl shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-ui text-body-sm text-on-surface-variant uppercase">Coincidencias</span>
+<span class="material-symbols-outlined text-secondary text-lg">check_circle</span>
+</div>
+<div class="mt-space-sm">
+<div class="flex items-baseline gap-1.5">
+<span class="font-label-data-lg text-headline-lg text-secondary font-bold">15</span>
+<span class="font-label-data-sm text-secondary font-semibold text-body-sm">(83.3%)</span>
+</div>
+<p class="font-label-data-sm text-on-surface-variant text-[11px] mt-1">Sin desvío de inventario</p>
+</div>
+</div>
+<!-- Minor Differences -->
+<div class="flex flex-col justify-between p-space-md bg-surface-container-lowest rounded-xl shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-ui text-body-sm text-tertiary-container uppercase">Diferencias Menores</span>
+<span class="material-symbols-outlined text-on-tertiary-container text-lg">warning</span>
+</div>
+<div class="mt-space-sm">
+<div class="font-label-data-lg text-headline-lg text-tertiary font-bold">2</div>
+<p class="font-label-data-sm text-tertiary text-[11px] mt-1">Alimento (-23kg) y Huevo AA</p>
+</div>
+</div>
+<!-- Critical Discrepancies -->
+<div class="flex flex-col justify-between p-space-md bg-surface-container-lowest rounded-xl shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-ui text-body-sm text-error uppercase">Inconsistencias</span>
+<span class="material-symbols-outlined text-error text-lg">error</span>
+</div>
+<div class="mt-space-sm">
+<div class="flex items-baseline gap-1.5">
+<span class="font-label-data-lg text-headline-lg text-error font-bold">1</span>
+<span class="font-label-ui text-[11px] px-1.5 py-0.5 rounded bg-error-container text-on-error-container uppercase font-semibold">Crítica</span>
+</div>
+<p class="font-label-data-sm text-on-surface-variant text-[11px] mt-1">Huevo Jumbo (-100 u)</p>
+</div>
+</div>
+<!-- Global Confidence Dial -->
+<div class="flex flex-col justify-between p-space-md bg-primary-container text-on-primary rounded-xl shadow-sm">
+<div class="flex items-center justify-between">
+<span class="font-label-ui text-body-sm text-on-primary-container uppercase font-semibold">Confianza Óptica OCR</span>
+<span class="material-symbols-outlined text-secondary-container text-lg">psychology</span>
+</div>
+<div class="mt-space-sm">
+<div class="flex items-baseline justify-between">
+<span class="font-label-data-lg text-headline-lg text-on-primary font-bold">98.4%</span>
+<span class="font-label-ui text-[10px] text-secondary-container font-semibold tracking-wider uppercase">Modelo AgroVision v4</span>
+</div>
+<div class="w-full h-2 bg-primary rounded-full overflow-hidden mt-2">
+<div class="h-full bg-secondary-fixed rounded-full" style="width: 98.4%"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- COMPARADOR SPLIT 2 COLUMNAS INTERACTIVO -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-space-lg">
+<!-- COLUMNA IZQUIERDA: DOCUMENTO FÍSICO / OCR SCAN -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<!-- Card Header -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-primary text-xl">description</span>
+<div>
+<h2 class="font-headline-md text-body-lg text-primary font-bold leading-tight">DOCUMENTO FÍSICO / ESCANEO OCR</h2>
+<p class="font-label-data-sm text-[11px] text-on-surface-variant">Boleta de Control Manual en Galpón</p>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-data-sm text-body-sm font-semibold inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+          Digitalizado 98.4%
+        </span>
+</div>
+<!-- Scanned Sheet Visual with Bounding Boxes -->
+<div class="relative p-space-md bg-surface-container flex flex-col items-center justify-center min-h-[220px]">
+<div class="relative w-full max-w-lg aspect-[16/9] rounded-lg overflow-hidden bg-surface-container-highest shadow-inner flex items-center justify-center">
+<img class="w-full h-full object-cover opacity-90 filter contrast-105" data-alt="Close up photographic view of a real industrial paper farm logging sheet with clipboard, handwritten ink notations in grid lines, stamped dates, and digital glowing augmented reality green and amber bounding boxes highlighting poultry egg harvest numbers inside a bright agricultural warehouse facility." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAl167Wy6B4m-LCWck-Gobr5BmEU7bv6Iw81xtQhuOwe52EvztRnsHqzp5axQdL29HldHIzTQMnuH30udxuldYC2NG0DgSkMI-qviS7q7WP6c-RSV1xPBZBxVbcv6_MZa3VzclMZwScZZrbyD3h7K7UytVRheorzNtoo5dzrDkARAEt5lPxO9A9eL5K7WZaa2EXpIdmwlhdYVnE4k5WQcg7w8IRNKk3ajQhBqS1nFc6Qm8O63ZEUSiN"/>
+<!-- Bounding Boxes Overlay Simulation -->
+<div class="absolute inset-0 p-4 pointer-events-none flex flex-col justify-between">
+<div class="flex justify-between items-start">
+<span class="px-2 py-0.5 rounded bg-primary/80 backdrop-blur text-on-primary font-label-data-sm text-[10px]">
+                CAM-01 • SENSOR RIDGE
+              </span>
+<span class="px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-label-data-sm text-[10px] font-semibold">
+                7 Detecciones Reconocidas
+              </span>
+</div>
+<div class="grid grid-cols-3 gap-2">
+<div class="p-1 rounded bg-secondary-fixed/90 backdrop-blur text-on-secondary-fixed-variant font-label-data-sm text-[10px] font-bold shadow-sm">
+                POSTURA: 5.849 [99%]
+              </div>
+<div class="p-1 rounded bg-tertiary-fixed/90 backdrop-blur text-on-tertiary-fixed-variant font-label-data-sm text-[10px] font-bold shadow-sm">
+                ALIMENTO: 723kg [97%]
+              </div>
+<div class="p-1 rounded bg-error-container/90 backdrop-blur text-on-error-container font-label-data-sm text-[10px] font-bold shadow-sm">
+                JUMBO: 1.200 [95%]
+              </div>
+</div>
+</div>
+</div>
+<div class="w-full mt-space-sm flex items-center justify-between text-on-surface-variant font-body-sm">
+<div class="flex items-center gap-1 font-label-data-sm text-[11px]">
+<span class="material-symbols-outlined text-sm text-outline">schedule</span>
+<span>03 Sep 2026, 06:30 AM</span>
+</div>
+<div class="flex items-center gap-1 font-body-sm">
+<span class="material-symbols-outlined text-sm text-outline">badge</span>
+<span class="text-on-surface font-medium">Carlos Mendoza</span>
+<span class="font-label-ui text-[10px] text-on-surface-variant">(Galponero #4)</span>
+</div>
+</div>
+</div>
+<!-- Scanned Fields List -->
+<div class="p-space-md space-y-space-xs flex-1">
+<div class="px-space-sm py-1 font-label-ui text-[11px] text-on-surface-variant uppercase font-semibold">
+          Lectura Óptica Vectorial
+        </div>
+<div class="space-y-1.5">
+<!-- Item 1 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Producción Total</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">5.849 huevos</span>
+<span class="font-label-data-sm text-[11px] px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">99% OCR</span>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Alimento Suministrado</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">723 kg</span>
+<span class="font-label-data-sm text-[11px] px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">97% OCR</span>
+</div>
+</div>
+<!-- Item 3 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Clasificación Jumbo</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">1.200 u</span>
+<span class="font-label-data-sm text-[11px] px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">95% OCR</span>
+</div>
+</div>
+<!-- Item 4 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Clasificación Extra</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">1.850 u</span>
+<span class="font-label-data-sm text-[11px] px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">98% OCR</span>
+</div>
+</div>
+<!-- Item 5 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Clasificación AA</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">2.100 u</span>
+<span class="font-label-data-sm text-[11px] px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">99% OCR</span>
+</div>
+</div>
+<!-- Item 6 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Huevos Rotos / Averiados</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">42 u</span>
+<span class="font-label-data-sm text-[11px] px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">92% OCR</span>
+</div>
+</div>
+<!-- Item 7 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Aves Muertas (Mortalidad)</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">2 aves</span>
+<span class="font-label-data-sm text-[11px] px-1.5 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">100% OCR</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- COLUMNA DERECHA: PLANILLA REGISTRADA EN EXCEL -->
+<div class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<!-- Card Header -->
+<div class="flex items-center justify-between p-space-md bg-surface-container-low">
+<div class="flex items-center gap-space-sm">
+<span class="material-symbols-outlined text-secondary text-xl">table_view</span>
+<div>
+<h2 class="font-headline-md text-body-lg text-primary font-bold leading-tight">PLANILLA REGISTRADA EN EXCEL (.XLSM)</h2>
+<p class="font-label-data-sm text-[11px] text-on-surface-variant font-medium">Archivo: LLANO GRANDE 2026.xlsm • Hoja: POSTURA_03SEP</p>
+</div>
+</div>
+<span class="px-2.5 py-1 rounded-full bg-surface-container text-on-surface font-label-data-sm text-body-sm font-semibold inline-flex items-center gap-1">
+<span class="material-symbols-outlined text-xs text-secondary">sync</span>
+          Sync OK
+        </span>
+</div>
+<!-- SpreadSheet Meta Preview Hero Box -->
+<div class="relative p-space-md bg-surface-container flex flex-col items-center justify-center min-h-[220px]">
+<div class="w-full max-w-lg aspect-[16/9] rounded-lg bg-surface-container-lowest shadow-inner p-space-md flex flex-col justify-between overflow-hidden">
+<div class="flex items-center justify-between pb-2">
+<div class="flex items-center gap-2">
+<span class="w-3 h-3 rounded-full bg-error"></span>
+<span class="w-3 h-3 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="w-3 h-3 rounded-full bg-secondary"></span>
+<span class="font-label-data-sm text-[11px] text-on-surface-variant ml-2 font-medium">LIBRO_DIARIO_GRANJA.xlsm</span>
+</div>
+<span class="font-label-ui text-[10px] text-outline font-semibold">FILA 142 - CELDA F18</span>
+</div>
+<!-- Micro Grid Visualizing Excel Table -->
+<div class="grid grid-cols-4 gap-1 font-label-data-sm text-[10px] text-on-surface-variant">
+<div class="p-1 rounded bg-surface-container font-semibold text-primary">COL A: FECHA</div>
+<div class="p-1 rounded bg-surface-container font-semibold text-primary">COL B: CONCEPTO</div>
+<div class="p-1 rounded bg-surface-container font-semibold text-primary">COL C: CANTIDAD</div>
+<div class="p-1 rounded bg-surface-container font-semibold text-primary">COL D: KILOS</div>
+<div class="p-1 bg-surface-container-low text-on-surface">03/09/2026</div>
+<div class="p-1 bg-surface-container-low text-on-surface">Huevos Jumbo</div>
+<div class="p-1 bg-error-container text-on-error-container font-bold">1.100</div>
+<div class="p-1 bg-surface-container-low text-on-surface">71.5 kg</div>
+<div class="p-1 bg-surface-container-low text-on-surface">03/09/2026</div>
+<div class="p-1 bg-surface-container-low text-on-surface">Huevos AA</div>
+<div class="p-1 bg-tertiary-container text-on-tertiary-container font-bold">2.200</div>
+<div class="p-1 bg-surface-container-low text-on-surface">132.0 kg</div>
+<div class="p-1 bg-surface-container-low text-on-surface">03/09/2026</div>
+<div class="p-1 bg-surface-container-low text-on-surface">Pienso Fase 2</div>
+<div class="p-1 bg-surface-container-low text-on-surface">--</div>
+<div class="p-1 bg-tertiary-container text-on-tertiary-container font-bold">700.0 kg</div>
+</div>
+<div class="pt-2 flex items-center justify-between text-[11px] font-label-data-sm text-outline">
+<span>Fórmula: SUM(C14:C28)</span>
+<span class="text-secondary font-semibold">Integridad de Libro Válida</span>
+</div>
+</div>
+<div class="w-full mt-space-sm flex items-center justify-between text-on-surface-variant font-body-sm">
+<div class="flex items-center gap-1 font-label-data-sm text-[11px]">
+<span class="material-symbols-outlined text-sm text-outline">schedule</span>
+<span>03 Sep 2026, 07:15 AM</span>
+</div>
+<div class="flex items-center gap-1 font-body-sm">
+<span class="material-symbols-outlined text-sm text-outline">account_circle</span>
+<span class="text-on-surface font-medium">Laura Ortiz</span>
+<span class="font-label-ui text-[10px] text-on-surface-variant">(Digitador Contable)</span>
+</div>
+</div>
+</div>
+<!-- Excel Fields Compared List -->
+<div class="p-space-md space-y-space-xs flex-1">
+<div class="px-space-sm py-1 font-label-ui text-[11px] text-on-surface-variant uppercase font-semibold">
+          Datos en Hoja de Cálculo &amp; Comparativa
+        </div>
+<div class="space-y-1.5">
+<!-- Excel 1 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Producción Total</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">5.849 huevos</span>
+<span class="font-label-data-sm text-[11px] px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">check</span> Exacto
+              </span>
+</div>
+</div>
+<!-- Excel 2 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-tertiary-fixed/30 hover:bg-tertiary-fixed/50 transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Alimento Suministrado</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-tertiary font-bold">700 kg</span>
+<span class="font-label-data-sm text-[11px] px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">warning</span> -23 kg Desfase
+              </span>
+</div>
+</div>
+<!-- Excel 3 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-error-container/40 hover:bg-error-container/60 transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Clasificación Jumbo</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-error font-bold">1.100 u</span>
+<span class="font-label-data-sm text-[11px] px-2 py-0.5 rounded-full bg-error-container text-on-error-container font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">close</span> -100 u Crítico
+              </span>
+</div>
+</div>
+<!-- Excel 4 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Clasificación Extra</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">1.850 u</span>
+<span class="font-label-data-sm text-[11px] px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">check</span> Exacto
+              </span>
+</div>
+</div>
+<!-- Excel 5 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-tertiary-fixed/30 hover:bg-tertiary-fixed/50 transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Clasificación AA</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-tertiary font-bold">2.200 u</span>
+<span class="font-label-data-sm text-[11px] px-2 py-0.5 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">priority_high</span> +100 u Desfase
+              </span>
+</div>
+</div>
+<!-- Excel 6 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Huevos Rotos / Averiados</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">42 u</span>
+<span class="font-label-data-sm text-[11px] px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">check</span> Exacto
+              </span>
+</div>
+</div>
+<!-- Excel 7 -->
+<div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-low hover:bg-surface-container transition-colors">
+<span class="font-body-md text-body-sm text-on-surface font-medium">Aves Muertas (Mortalidad)</span>
+<div class="flex items-center gap-space-sm">
+<span class="font-label-data-md text-body-md text-primary font-bold">2 aves</span>
+<span class="font-label-data-sm text-[11px] px-2 py-0.5 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs">check</span> Exacto
+              </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- TABLA CENTRAL DE DISCREPANCIAS Y AJUSTE CONTABLE -->
+<section class="flex flex-col bg-surface-container-lowest rounded-xl shadow-sm overflow-hidden">
+<div class="p-space-lg bg-surface-container-lowest flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div>
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary"></span>
+<h2 class="font-headline-md text-headline-md text-primary font-bold">
+            Matriz de Discrepancias y Ajustes de Kardex
+          </h2>
+</div>
+<p class="font-body-md text-body-sm text-on-surface-variant mt-1">
+          Conciliación valorizada en pesos colombianos (COP). Seleccione la decisión de auditoría antes de asentar en libros.
+        </p>
+</div>
+<!-- Quick filters -->
+<div class="flex items-center gap-space-xs bg-surface-container-low p-1 rounded-lg">
+<button class="px-space-sm py-1 rounded font-body-sm text-body-sm bg-surface-container-lowest font-semibold text-primary shadow-sm" type="button">Todos (5)</button>
+<button class="px-space-sm py-1 rounded font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface" type="button">Discrepancias (3)</button>
+<button class="px-space-sm py-1 rounded font-body-sm text-body-sm text-on-surface-variant hover:text-on-surface" type="button">Sin Diferencia (2)</button>
+</div>
+</div>
+<!-- Data Table -->
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-ui text-body-sm uppercase tracking-wider">
+<th class="py-space-md px-space-lg font-semibold">Parámetro Operativo</th>
+<th class="py-space-md px-space-md font-semibold text-right">Valor OCR (Físico)</th>
+<th class="py-space-md px-space-md font-semibold text-right">Valor Excel (Digitado)</th>
+<th class="py-space-md px-space-md font-semibold text-right">Diferencia Neta</th>
+<th class="py-space-md px-space-md font-semibold text-right">Impacto Contable</th>
+<th class="py-space-md px-space-md font-semibold text-center">Estado Semáforo</th>
+<th class="py-space-md px-space-lg font-semibold text-center">Decisión / Acción</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-body-md font-body-md">
+<!-- Row 1: Producción Postura -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-lg">egg</span>
+</span>
+<div>
+<span class="font-headline-md text-body-sm text-on-surface font-semibold block">Producción Postura Total</span>
+<span class="font-label-data-sm text-[10px] text-on-surface-variant">Conteo huevos recolectados en bandas</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-semibold text-primary">5.849</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-semibold text-primary">5.849</td>
+<td class="py-space-md px-space-md text-right font-label-data-md text-secondary font-medium">0</td>
+<td class="py-space-md px-space-md text-right font-label-data-md text-on-surface-variant">$0.00</td>
+<td class="py-space-md px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-data-sm text-body-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Coincide
+              </span>
+</td>
+<td class="py-space-md px-space-lg text-center">
+<span class="font-label-ui text-body-sm text-secondary font-semibold uppercase tracking-wider">Auto-aprobado</span>
+</td>
+</tr>
+<!-- Row 2: Consumo Alimento -->
+<tr class="bg-surface-container-low/40 hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-lg">grain</span>
+</span>
+<div>
+<span class="font-headline-md text-body-sm text-on-surface font-semibold block">Consumo Alimento (Pienso)</span>
+<span class="font-label-data-sm text-[10px] text-on-surface-variant">Descarga báscula silo A1 - Fase Postura 2</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-semibold text-primary">723 kg</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-semibold text-tertiary">700 kg</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-bold text-on-tertiary-container">+23 kg</td>
+<td class="py-space-md px-space-md text-right font-label-data-md text-tertiary font-bold">+$41.400 COP</td>
+<td class="py-space-md px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-data-sm text-body-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container"></span>
+                Advertencia
+              </span>
+</td>
+<td class="py-space-md px-space-lg text-center">
+<div class="inline-flex items-center gap-1">
+<button class="px-2.5 py-1 rounded bg-primary text-on-primary font-label-ui text-body-sm font-semibold hover:bg-primary-container shadow-sm transition-colors" type="button">Usar OCR (723kg)</button>
+<button class="px-2.5 py-1 rounded bg-surface-container text-on-surface font-label-ui text-body-sm font-medium hover:bg-surface-variant transition-colors" type="button">Mantener Excel</button>
+<button class="p-1 rounded bg-surface-container text-outline hover:text-on-surface" title="Editar valor manualmente" type="button">
+<span class="material-symbols-outlined text-sm">edit</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Huevo Jumbo (Discrepancia Crítica) -->
+<tr class="bg-error-container/20 hover:bg-error-container/30 transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-lg">priority_high</span>
+</span>
+<div>
+<span class="font-headline-md text-body-sm text-on-surface font-semibold block">Huevo Clasificación Jumbo</span>
+<span class="font-label-data-sm text-[10px] text-error font-medium">Mayor a 66g • Desvío material detectado</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-bold text-primary">1.200 u</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-bold text-error">1.100 u</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-bold text-error">+100 u</td>
+<td class="py-space-md px-space-md text-right font-label-data-md text-error font-bold">+$65.000 COP</td>
+<td class="py-space-md px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-data-sm text-body-sm font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error"></span>
+                Diferencia Crítica
+              </span>
+</td>
+<td class="py-space-md px-space-lg text-center">
+<div class="inline-flex items-center gap-1.5">
+<button class="px-2.5 py-1 rounded bg-primary text-on-primary font-label-ui text-body-sm font-semibold hover:bg-primary-container shadow-sm transition-colors" type="button">Corregir a 1.200</button>
+<button class="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-container-low text-on-surface font-label-ui text-body-sm font-medium hover:bg-surface-container transition-colors" type="button">
+<span class="material-symbols-outlined text-xs">zoom_in</span>
+                  Foto Escaneo
+                </button>
+</div>
+</td>
+</tr>
+<!-- Row 4: Huevo AA -->
+<tr class="bg-surface-container-low/40 hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-lg">line_weight</span>
+</span>
+<div>
+<span class="font-headline-md text-body-sm text-on-surface font-semibold block">Huevo Clasificación AA</span>
+<span class="font-label-data-sm text-[10px] text-on-surface-variant">Rango estándar 53.0g - 59.9g</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-semibold text-primary">2.100 u</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-semibold text-tertiary">2.200 u</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-bold text-tertiary">-100 u</td>
+<td class="py-space-md px-space-md text-right font-label-data-md text-on-surface-variant font-medium">-$52.000 COP</td>
+<td class="py-space-md px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-tertiary-fixed text-on-tertiary-fixed-variant font-label-data-sm text-body-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container"></span>
+                Diferencia Menor
+              </span>
+</td>
+<td class="py-space-md px-space-lg text-center">
+<button class="px-3 py-1 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-label-ui text-body-sm font-semibold hover:bg-secondary-fixed-dim transition-colors" type="button">Re-clasificar</button>
+</td>
+</tr>
+<!-- Row 5: Mortalidad Parvada -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-space-md px-space-lg">
+<div class="flex items-center gap-space-sm">
+<span class="w-8 h-8 rounded-lg bg-surface-container flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-lg">cruelty_free</span>
+</span>
+<div>
+<span class="font-headline-md text-body-sm text-on-surface font-semibold block">Mortalidad Parvada</span>
+<span class="font-label-data-sm text-[10px] text-on-surface-variant">Bajas diarias retiradas del galpón</span>
+</div>
+</div>
+</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-semibold text-primary">2 aves</td>
+<td class="py-space-md px-space-md text-right font-label-data-md font-semibold text-primary">2 aves</td>
+<td class="py-space-md px-space-md text-right font-label-data-md text-secondary font-medium">0</td>
+<td class="py-space-md px-space-md text-right font-label-data-md text-on-surface-variant">$0.00</td>
+<td class="py-space-md px-space-md text-center">
+<span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-data-sm text-body-sm font-semibold">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                Coincide
+              </span>
+</td>
+<td class="py-space-md px-space-lg text-center">
+<span class="font-label-ui text-body-sm text-secondary font-semibold uppercase tracking-wider">Auto-aprobado</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Summary Footer / Impact Strip -->
+<div class="p-space-md bg-surface-container flex flex-col md:flex-row items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-md">
+<span class="font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold">Impacto Contable Neto Estimado:</span>
+<div class="flex items-baseline gap-1">
+<span class="font-label-data-lg text-headline-md text-primary font-bold">+$54.400 COP</span>
+<span class="font-label-data-sm text-secondary font-semibold">(+$13.000 huevos / +$41.400 alimento)</span>
+</div>
+</div>
+<div class="flex items-center gap-space-xs font-label-data-sm text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-sm text-secondary">verified_user</span>
+<span>Regla de negocio: Tolerancia automática &lt; 0.5% por peso en tolva</span>
+</div>
+</div>
+</section>
+<!-- PANEL DE OBSERVACIONES Y FIRMAS DIGITALES -->
+<section class="grid grid-cols-1 lg:grid-cols-3 gap-space-lg">
+<!-- Auditor Notes -->
+<div class="lg:col-span-2 bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between space-y-space-md">
+<div>
+<div class="flex items-center justify-between mb-space-xs">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl">rate_review</span>
+<h3 class="font-headline-md text-body-lg text-primary font-bold">Dictamen y Observación de Conciliación</h3>
+</div>
+<span class="font-label-data-sm text-[11px] px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">Contabilidad Central</span>
+</div>
+<p class="font-body-md text-body-sm text-on-surface-variant mb-space-sm">
+          Este comentario quedará anexo permanentemente al asiento contable y al Kardex del lote.
+        </p>
+<textarea class="w-full p-space-md bg-surface-container-low rounded-lg text-body-md text-on-surface font-body-md placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container transition-colors shadow-inner" rows="3">Se identifica que el digitador registró 100 huevos Jumbo como AA en la planilla Excel. Se ajusta según conteo físico verificado por fotografía OCR.</textarea>
+</div>
+<!-- Quick Resolution Checkboxes -->
+<div class="flex flex-wrap items-center gap-space-md pt-space-xs">
+<label class="flex items-center gap-2 cursor-pointer select-none">
+<input checked="" class="w-4 h-4 rounded bg-surface-container text-primary accent-primary cursor-pointer" type="checkbox"/>
+<span class="font-body-md text-body-sm text-on-surface">Notificar a galponero Carlos Mendoza vía SMS / WhatsApp</span>
+</label>
+<label class="flex items-center gap-2 cursor-pointer select-none">
+<input checked="" class="w-4 h-4 rounded bg-surface-container text-primary accent-primary cursor-pointer" type="checkbox"/>
+<span class="font-body-md text-body-sm text-on-surface">Actualizar planilla Excel en la nube automáticamente</span>
+</label>
+</div>
+</div>
+<!-- Digital Signatures & Final Auditor Seal -->
+<div class="bg-surface-container-lowest p-space-lg rounded-xl shadow-sm flex flex-col justify-between space-y-space-md">
+<div>
+<div class="flex items-center gap-2 mb-space-xs">
+<span class="material-symbols-outlined text-secondary text-xl">draw</span>
+<h3 class="font-headline-md text-body-lg text-primary font-bold">Firma de Responsabilidad</h3>
+</div>
+<p class="font-body-md text-body-sm text-on-surface-variant mb-space-md">
+          Acreditación según protocolo SAG &amp; DIAN.
+        </p>
+<!-- Signature Card -->
+<div class="p-space-md bg-surface-container-low rounded-lg space-y-space-xs">
+<div class="flex items-center justify-between">
+<span class="font-headline-md text-body-sm text-primary font-bold">Johan Ramírez</span>
+<span class="font-label-data-sm text-[10px] px-2 py-0.5 rounded bg-secondary-fixed text-on-secondary-fixed-variant font-bold uppercase">Firmado</span>
+</div>
+<p class="font-label-ui text-[11px] text-on-surface-variant uppercase">Contador General • TP #192841-T</p>
+<div class="pt-2 flex items-center justify-between text-on-surface-variant font-label-data-sm text-[10px]">
+<span>Hash: SHA256: 8f9b...a47e</span>
+<span>03/09/2026 07:42:19</span>
+</div>
+</div>
+</div>
+<div class="pt-2 flex items-center gap-2 text-on-surface-variant font-label-data-sm text-[11px]">
+<span class="material-symbols-outlined text-sm text-secondary">shield</span>
+<span>Validación biométrica respaldada por AWS Textract Agro v4</span>
+</div>
+</div>
+</section>
+<!-- ACTION FOOTER BAR -->
+<footer class="flex flex-col sm:flex-row items-center justify-between gap-space-md p-space-lg bg-surface-container-lowest rounded-xl shadow-sm">
+<div class="flex flex-wrap items-center gap-space-sm w-full sm:w-auto">
+<button class="w-full sm:w-auto px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container font-headline-md text-body-sm font-medium transition-colors" type="button">
+        Guardar Borrador de Conciliación
+      </button>
+<button class="w-full sm:w-auto px-space-md py-2.5 rounded-lg bg-surface-container-low text-on-surface hover:bg-surface-container font-headline-md text-body-sm font-medium transition-colors" type="button">
+        Solicitar Aclaración a Galpón 1A
+      </button>
+<button class="w-full sm:w-auto px-space-md py-2.5 rounded-lg bg-error-container text-on-error-container hover:opacity-90 font-headline-md text-body-sm font-semibold transition-colors" type="button">
+        Rechazar Planilla
+      </button>
+</div>
+<button class="w-full sm:w-auto inline-flex items-center justify-center gap-space-sm px-space-xl py-3 rounded-lg bg-primary text-on-primary hover:bg-primary-container font-headline-md text-body-md font-bold shadow-lg transition-all" type="button">
+<span class="material-symbols-outlined text-secondary-container">task_alt</span>
+<span>Aprobar y Asentar en Balanza de Producción</span>
+</button>
+</footer>
+</div>
+<script>
+  // Simple micro-interaction for visual feedback on button actions
+  document.addEventListener('DOMContentLoaded', () => {
+    const actionButtons = document.querySelectorAll('table button, footer button');
+    actionButtons.forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        if (!this.classList.contains('active-state')) {
+          this.style.transform = 'scale(0.97)';
+          setTimeout(() => {
+            this.style.transform = 'scale(1)';
+          }, 120);
+        }
+      });
+    });
+  });
+</script></main></div></body></html>

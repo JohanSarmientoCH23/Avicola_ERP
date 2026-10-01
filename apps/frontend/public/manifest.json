@@ -1,0 +1,28 @@
+{
+  "name": "Avícola ERP - Llano Grande",
+  "short_name": "Avícola ERP",
+  "description": "Sistema de control de producción e inventarios avícolas - Granja Llano Grande",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#FAF8FF",
+  "theme_color": "#0B2A20",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Nuevo Reporte",
+      "short_name": "Reporte",
+      "description": "Crear reporte diario de producción",
+      "url": "/dashboard/production"
+    },
+    {
+      "name": "Ver Inventario",
+      "short_name": "Inventario",
+      "description": "Ver inventario de huevos y bandejas",
+      "url": "/dashboard/inventory"
+    }
+  ],
+  "screenshots": [],
+  "prefer_related_applications": false
+}

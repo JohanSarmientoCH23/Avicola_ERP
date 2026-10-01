@@ -1,8 +1,8 @@
-import { IsString, IsNumber, IsOptional, IsDateString, IsEnum } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
 
 export class CreateCostoDto {
   @IsString()
-  categoriaId: string;
+  conceptoId: string;
 
   @IsString()
   descripcion: string;

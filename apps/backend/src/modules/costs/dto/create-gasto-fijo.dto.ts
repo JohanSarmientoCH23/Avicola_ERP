@@ -1,8 +1,8 @@
-import { IsString, IsNumber, IsOptional, IsDateString, IsBoolean } from 'class-validator';
+import { IsString, IsNumber, IsOptional, IsDateString } from 'class-validator';
 
 export class CreateGastoFijoDto {
   @IsString()
-  concepto: string;
+  conceptoId: string;
 
   @IsNumber()
   monto: number;

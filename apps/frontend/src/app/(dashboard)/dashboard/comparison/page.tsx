@@ -21,7 +21,7 @@ export default function ComparisonPage() {
     try {
       const [ocrRes, excelRes] = await Promise.all([
         productionService.getReports({ limit: 50 }),
-        excelService.getReportes(50),
+        excelService.getReportes({ limit: 50 }),
       ]);
       setReportesOcr(ocrRes.data?.data || []);
       setReportesExcel(Array.isArray(excelRes.data) ? excelRes.data : []);

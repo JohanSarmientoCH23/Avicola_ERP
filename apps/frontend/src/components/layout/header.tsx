@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { authService } from "@/lib/api";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -28,17 +29,26 @@ export function Header({ onToggleSidebar }: HeaderProps) {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try { setUser(JSON.parse(stored)); } catch {}
+      const userCookie = document.cookie.split('; ').find(c => c.startsWith('user='));
+      if (userCookie) {
+        try { setUser(JSON.parse(decodeURIComponent(userCookie.split('=').slice(1).join('=')))); } catch {}
       }
     }
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    router.push("/");
+  const handleLogout = async () => {
+    try {
+      await authService.logout();
+    } catch {
+      // Logout even if API call fails
+      if (typeof window !== "undefined") {
+        localStorage.removeItem('auth_token');
+        document.cookie.split(';').forEach(c => {
+          document.cookie = c.trim().split('=')[0] + '=; path=/; max-age=0';
+        });
+      }
+      window.location.href = '/';
+    }
   };
 
   const currentPage = pageNames[pathname] || "Dashboard";

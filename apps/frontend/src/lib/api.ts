@@ -2,27 +2,84 @@ import axios from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
+export function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.split('; ').find(c => c.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split('=').slice(1).join('=')) : null;
+}
+
+export function setCookie(name: string, value: string, maxAge = 60 * 60 * 8) {
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax`;
+}
+
+export function removeCookie(name: string) {
+  document.cookie = `${name}=; path=/; max-age=0`;
+}
+
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem('auth_token');
+}
+
+function setAuthToken(token: string) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem('auth_token', token);
+}
+
+function removeAuthToken() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('auth_token');
+}
+
 const api = axios.create({
   baseURL: API_URL,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('accessToken');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-  }
+  const token = getAuthToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
 api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && typeof window !== 'undefined') {
-      localStorage.removeItem('accessToken');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+  (response) => {
+    if (response.data && response.data.success !== undefined && response.data.data !== undefined) {
+      response.data = response.data.data;
     }
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    const isLoginRequest = originalRequest.url?.includes('/auth/login');
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isLoginRequest) {
+      originalRequest._retry = true;
+
+      try {
+        const refreshToken = getCookie('refreshToken');
+        if (refreshToken) {
+          const { data: rawRefresh } = await axios.post(`${API_URL}/auth/refresh`, { refreshToken }, { withCredentials: true });
+          const refreshData = rawRefresh?.data || rawRefresh;
+          setAuthToken(refreshData.accessToken);
+          setCookie('accessToken', refreshData.accessToken);
+          if (refreshData.refreshToken) {
+            setCookie('refreshToken', refreshData.refreshToken);
+          }
+          originalRequest.headers.Authorization = `Bearer ${refreshData.accessToken}`;
+          return api(originalRequest);
+        }
+      } catch {
+        removeAuthToken();
+        removeCookie('accessToken');
+        removeCookie('refreshToken');
+        removeCookie('user');
+        if (typeof window !== 'undefined') window.location.href = '/';
+      }
+    }
+
     return Promise.reject(error);
   }
 );
@@ -30,9 +87,37 @@ api.interceptors.response.use(
 export default api;
 
 export const authService = {
-  login: (email: string, password: string) => api.post('/auth/login', { email, password }),
-  register: (data: any) => api.post('/auth/register', data),
-  logout: (userId: string) => api.post('/auth/logout', { userId }),
+  login: async (email: string, password: string) => {
+    const { data } = await api.post('/auth/login', { email, password });
+    if (data.accessToken) {
+      setAuthToken(data.accessToken);
+      setCookie('accessToken', data.accessToken);
+    }
+    if (data.refreshToken) setCookie('refreshToken', data.refreshToken);
+    if (data.user) setCookie('user', JSON.stringify(data.user));
+    return data;
+  },
+  register: async (data: any) => {
+    const { data: result } = await api.post('/auth/register', data);
+    if (result.accessToken) {
+      setAuthToken(result.accessToken);
+      setCookie('accessToken', result.accessToken);
+    }
+    if (result.refreshToken) setCookie('refreshToken', result.refreshToken);
+    if (result.user) setCookie('user', JSON.stringify(result.user));
+    return result;
+  },
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } finally {
+      removeAuthToken();
+      removeCookie('accessToken');
+      removeCookie('refreshToken');
+      removeCookie('user');
+      window.location.href = '/';
+    }
+  },
 };
 
 export const galponesService = {
@@ -58,13 +143,18 @@ export const ocrService = {
 };
 
 export const excelService = {
+  analyze: (formData: FormData) => api.post('/excel/analyze', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  preview: (formData: FormData, sheet?: string) => api.post('/excel/preview', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    params: sheet ? { sheet } : undefined,
+  }),
   importExcel: (formData: FormData) => api.post('/excel/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  preview: (formData: FormData) => api.post('/excel/preview', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  getReportes: (limit?: number) => api.get('/excel/reportes', { params: { limit } }),
+  getReportes: (params?: { limit?: number; page?: number }) => api.get('/excel/reportes', { params }),
+  getReporte: (id: string) => api.get(`/excel/reportes/${id}`),
 };
 
 export const comparisonService = {
@@ -91,20 +181,27 @@ export const reconciliationService = {
   getOne: (id: string) => api.get(`/reconciliation/${id}`),
   approve: (id: string) => api.post(`/reconciliation/${id}/approve`),
   reject: (id: string, observaciones: string) => api.post(`/reconciliation/${id}/reject`, { observaciones }),
+  requestCorrection: (id: string, observaciones: string) => api.post(`/reconciliation/${id}/request-correction`, { observaciones }),
 };
 
 export const dashboardService = {
   getKPIs: (fecha?: string) => api.get('/dashboard/kpis', { params: { fecha } }),
   getProduccionPorGalpon: (fecha?: string) => api.get('/dashboard/produccion-por-galpon', { params: { fecha } }),
   getTendenciaMensual: (meses?: number) => api.get('/dashboard/tendencia-mensual', { params: { meses } }),
+  getMortalidadPorGalpon: (fecha?: string) => api.get('/dashboard/mortalidad-por-galpon', { params: { fecha } }),
+  getResumenDiario: () => api.get('/dashboard/resumen-diario'),
   getCostosResumen: (fechaInicio?: string, fechaFin?: string) => api.get('/dashboard/costos-resumen', { params: { fechaInicio, fechaFin } }),
 };
 
 export const reportsService = {
-  getDiario: (fecha: string) => api.get('/reports/diario', { params: { fecha } }),
-  getSemanal: (fechaInicio: string, fechaFin: string) => api.get('/reports/semanal', { params: { fechaInicio, fechaFin } }),
-  getMensual: (anio: number, mes: number) => api.get('/reports/mensual', { params: { anio, mes } }),
-  exportCSV: (tipo: string, fecha?: string) => api.get('/reports/export/csv', { params: { tipo, fecha }, responseType: 'blob' }),
+  getDiario: (params?: { fecha?: string; galponId?: string; tipoHuevoId?: string }) => api.get('/reports/diario', { params }),
+  getSemanal: (params: { fechaInicio: string; fechaFin: string; galponId?: string }) => api.get('/reports/semanal', { params }),
+  getMensual: (params: { anio: number; mes: number; galponId?: string }) => api.get('/reports/mensual', { params }),
+  getInventarioHuevos: (tipoHuevoId?: string) => api.get('/reports/inventario/huevos', { params: { tipoHuevoId } }),
+  getInventarioAlimento: () => api.get('/reports/inventario/alimento'),
+  getInventarioAves: (galponId?: string) => api.get('/reports/inventario/aves', { params: { galponId } }),
+  exportCSV: (params: { tipo: string; fecha?: string; galponId?: string; tipoHuevoId?: string }) =>
+    api.get('/reports/export/csv', { params, responseType: 'blob' }),
 };
 
 export const auditService = {
@@ -135,4 +232,28 @@ export const aiService = {
   detectInconsistencias: (fecha: string) => api.get('/ai/inconsistencias', { params: { fecha } }),
   calcularConsumo: (galponId: string, gallinas: number) => api.get('/ai/consumo-esperado', { params: { galponId, gallinas } }),
   calcularPostura: (gallinas: number, edadSemanas: number) => api.get('/ai/postura-esperada', { params: { gallinas, edadSemanas } }),
+};
+
+export const userGalponService = {
+  assign: (data: { usuarioId: string; galponId: string }) => api.post('/user-galpon', data),
+  unassign: (usuarioId: string, galponId: string) => api.delete(`/user-galpon/${usuarioId}/${galponId}`),
+  getByUser: (usuarioId: string) => api.get(`/user-galpon/user/${usuarioId}`),
+  getByGalpon: (galponId: string) => api.get(`/user-galpon/galpon/${galponId}`),
+  getAll: () => api.get('/user-galpon'),
+  remove: (id: string) => api.delete(`/user-galpon/${id}`),
+};
+
+export const kardexService = {
+  createMovimiento: (data: any) => api.post('/kardex/movimientos', data),
+  getKardex: (tipoProducto: string, params?: any) => api.get(`/kardex/${tipoProducto}`, { params }),
+  getResumen: (tipoProducto: string, fecha?: string) => api.get(`/kardex/${tipoProducto}/resumen`, { params: { fecha } }),
+  getHistorialGalpon: (galponId: string) => api.get(`/kardex/galpon/${galponId}`),
+};
+
+export const despachosService = {
+  create: (data: any) => api.post('/despachos', data),
+  getAll: (params?: any) => api.get('/despachos', { params }),
+  getOne: (id: string) => api.get(`/despachos/${id}`),
+  approve: (id: string) => api.post(`/despachos/${id}/approve`),
+  cancel: (id: string, motivo: string) => api.post(`/despachos/${id}/cancel`, { motivo }),
 };

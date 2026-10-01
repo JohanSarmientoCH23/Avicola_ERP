@@ -1,9 +1,34 @@
+# Dependencies
 node_modules
+
+# Build outputs
 dist
-.env
-uploads
-*.log
-.DS_Store
-coverage
 .next
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Uploads
+uploads
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+
+# Turbo
 .turbo
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo

@@ -6,7 +6,7 @@ import { Rol } from '@prisma/client';
 export class DashboardService {
   constructor(private prisma: PrismaService) {}
 
-  async getKPIs(fecha?: string) {
+  async getKPIs(fecha?: string, usuarioId?: string, rol?: string) {
     const fechaBase = fecha ? new Date(fecha) : new Date();
     const startOfDay = new Date(fechaBase);
     startOfDay.setHours(0, 0, 0, 0);
@@ -16,15 +16,34 @@ export class DashboardService {
     const startOfMonth = new Date(fechaBase.getFullYear(), fechaBase.getMonth(), 1);
     const endOfMonth = new Date(fechaBase.getFullYear(), fechaBase.getMonth() + 1, 0);
 
+    let galponFilter: any = { estado: 'ACTIVO' };
+    let galponIds: string[] | null = null;
+
+    if (rol === Rol.GALPONERO && usuarioId) {
+      const asignaciones = await this.prisma.usuarioGalpon.findMany({
+        where: { usuarioId },
+        select: { galponId: true },
+      });
+      galponIds = asignaciones.map(a => a.galponId);
+      if (galponIds.length === 0) {
+        return this.getEmptyKPIs();
+      }
+      galponFilter = { ...galponFilter, id: { in: galponIds } };
+    }
+
+    const galpones = await this.prisma.galpon.findMany({ where: galponFilter });
+    const activeGalponIds = galpones.map(g => g.id);
+
     const reportesHoy = await this.prisma.reporteDiario.findMany({
-      where: { fecha: { gte: startOfDay, lte: endOfDay } },
+      where: {
+        fecha: { gte: startOfDay, lte: endOfDay },
+        ...(rol === Rol.GALPONERO && usuarioId ? { galponeroId: usuarioId } : {}),
+      },
       include: {
-        detallesGalpon: true,
+        detallesGalpon: { where: galponIds ? { galponId: { in: galponIds } } : undefined },
         produccionesHuevo: { include: { tipoHuevo: true } },
       },
     });
-
-    const galpones = await this.prisma.galpon.findMany({ where: { estado: 'ACTIVO' } });
 
     let totalMortalidad = 0;
     let totalProduccion = 0;
@@ -53,7 +72,10 @@ export class DashboardService {
       : '0';
 
     const produccionMensual = await this.prisma.detalleGalpon.findMany({
-      where: { reporte: { fecha: { gte: startOfMonth, lte: endOfMonth } } },
+      where: {
+        reporte: { fecha: { gte: startOfMonth, lte: endOfMonth } },
+        ...(galponIds ? { galponId: { in: galponIds } } : {}),
+      },
       select: { produccion: true, mortalidad: true },
     });
 
@@ -72,9 +94,18 @@ export class DashboardService {
 
     const inventarioAlimento = await this.prisma.inventarioAlimento.aggregate({
       _sum: { saldoFinalKg: true },
+      ...(galponIds ? { where: { galponId: { in: galponIds } } } : {}),
     });
 
     const comparaciones = await this.prisma.comparacion.findMany({
+      where: { fecha: { gte: startOfDay, lte: endOfDay } },
+    });
+
+    const conciliacionesPendientes = await this.prisma.conciliacion.count({
+      where: { estado: 'PENDIENTE' },
+    });
+
+    const reportesExcelHoy = await this.prisma.reporteExcel.count({
       where: { fecha: { gte: startOfDay, lte: endOfDay } },
     });
 
@@ -87,6 +118,9 @@ export class DashboardService {
     }
     if (Number(porcentajePostura) < 80 && totalGallinasVivas > 0) {
       alertas.push('Porcentaje de postura por debajo del 80%');
+    }
+    if (conciliacionesPendientes > 0) {
+      alertas.push(`${conciliacionesPendientes} conciliación(es) pendiente(s)`);
     }
 
     return {
@@ -111,20 +145,53 @@ export class DashboardService {
         correctas: comparaciones.filter(c => c.estado === 'CORRECTO').length,
         conDiferencias: comparaciones.filter(c => c.estado === 'CON_DIFERENCIAS').length,
       },
+      conciliacionesPendientes,
+      reportesExcelHoy,
       alertas,
       galponesActivos: galpones.length,
     };
   }
 
-  async getProduccionPorGalpon(fecha?: string) {
+  private getEmptyKPIs() {
+    return {
+      produccionDiaria: { total: 0, mortalidad: 0, gallinas: 0, consumo: 0, entradaAlimento: 0 },
+      gallinasVivas: 0,
+      porcentajePostura: 0,
+      mortalidadPorcentaje: 0,
+      produccionMensual: { total: 0, mortalidad: 0 },
+      inventarioHuevos: [],
+      inventarioAlimentoKg: 0,
+      comparacionesHoy: { total: 0, correctas: 0, conDiferencias: 0 },
+      conciliacionesPendientes: 0,
+      reportesExcelHoy: 0,
+      alertas: [],
+      galponesActivos: 0,
+    };
+  }
+
+  async getProduccionPorGalpon(fecha?: string, usuarioId?: string, rol?: string) {
     const fechaBase = fecha ? new Date(fecha) : new Date();
     const startOfDay = new Date(fechaBase);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(fechaBase);
     endOfDay.setHours(23, 59, 59, 999);
 
+    let galponFilter: any = {};
+    if (rol === Rol.GALPONERO && usuarioId) {
+      const asignaciones = await this.prisma.usuarioGalpon.findMany({
+        where: { usuarioId },
+        select: { galponId: true },
+      });
+      const galponIds = asignaciones.map(a => a.galponId);
+      if (galponIds.length === 0) return [];
+      galponFilter = { galponId: { in: galponIds } };
+    }
+
     const detalles = await this.prisma.detalleGalpon.findMany({
-      where: { reporte: { fecha: { gte: startOfDay, lte: endOfDay } } },
+      where: {
+        reporte: { fecha: { gte: startOfDay, lte: endOfDay } },
+        ...galponFilter,
+      },
       include: { galpon: { select: { codigo: true, capacidad: true } } },
       orderBy: { galpon: { codigo: 'asc' } },
     });
@@ -140,34 +207,63 @@ export class DashboardService {
     }));
   }
 
-  async getTendenciaMensual(meses: number = 6) {
+  async getTendenciaMensual(meses: number = 6, usuarioId?: string, rol?: string) {
     const now = new Date();
-    const tendencia: { mes: string; produccion: number; mortalidad: number }[] = [];
+    const start = new Date(now.getFullYear(), now.getMonth() - (meses - 1), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    for (let i = meses - 1; i >= 0; i--) {
-      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0);
-
-      const produccion = await this.prisma.detalleGalpon.findMany({
-        where: { reporte: { fecha: { gte: start, lte: end } } },
-        select: { produccion: true, mortalidad: true },
+    let galponFilter: any = {};
+    if (rol === Rol.GALPONERO && usuarioId) {
+      const asignaciones = await this.prisma.usuarioGalpon.findMany({
+        where: { usuarioId },
+        select: { galponId: true },
       });
-
-      let totalProd = 0;
-      let totalMort = 0;
-      for (const item of produccion) {
-        totalProd += item.produccion;
-        totalMort += item.mortalidad;
-      }
-
-      tendencia.push({
-        mes: start.toISOString().slice(0, 7),
-        produccion: totalProd,
-        mortalidad: totalMort,
-      });
+      const galponIds = asignaciones.map(a => a.galponId);
+      if (galponIds.length === 0) return [];
+      galponFilter = { galponId: { in: galponIds } };
     }
 
-    return tendencia;
+    const resultados = await this.prisma.detalleGalpon.groupBy({
+      by: ['reporteId'],
+      where: {
+        reporte: { fecha: { gte: start, lte: end } },
+        ...galponFilter,
+      },
+      _sum: { produccion: true, mortalidad: true },
+    });
+
+    const reportIds = resultados.map(r => r.reporteId);
+    const reportes = await this.prisma.reporteDiario.findMany({
+      where: { id: { in: reportIds } },
+      select: { id: true, fecha: true },
+    });
+
+    const fechaMap = new Map(reportes.map(r => [r.id, r.fecha]));
+    const monthData = new Map<string, { produccion: number; mortalidad: number }>();
+
+    for (let i = meses - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = d.toISOString().slice(0, 7);
+      monthData.set(key, { produccion: 0, mortalidad: 0 });
+    }
+
+    for (const resultado of resultados) {
+      const fecha = fechaMap.get(resultado.reporteId);
+      if (fecha) {
+        const key = fecha.toISOString().slice(0, 7);
+        const existing = monthData.get(key);
+        if (existing) {
+          existing.produccion += resultado._sum.produccion || 0;
+          existing.mortalidad += resultado._sum.mortalidad || 0;
+        }
+      }
+    }
+
+    return Array.from(monthData.entries()).map(([mes, data]) => ({
+      mes,
+      produccion: data.produccion,
+      mortalidad: data.mortalidad,
+    }));
   }
 
   async getCostosResumen(fechaInicio?: string, fechaFin?: string) {
@@ -198,5 +294,80 @@ export class DashboardService {
       gastosFijos: totalGastosFijos,
       total: Number(totalDirecto._sum.monto || 0) + Number(totalIndirecto._sum.monto || 0) + totalGastosFijos,
     };
+  }
+
+  async getMortalidadPorGalpon(fecha?: string, usuarioId?: string, rol?: string) {
+    const fechaBase = fecha ? new Date(fecha) : new Date();
+    const startOfDay = new Date(fechaBase);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(fechaBase);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    let galponFilter: any = {};
+    if (rol === Rol.GALPONERO && usuarioId) {
+      const asignaciones = await this.prisma.usuarioGalpon.findMany({
+        where: { usuarioId },
+        select: { galponId: true },
+      });
+      const galponIds = asignaciones.map(a => a.galponId);
+      if (galponIds.length === 0) return [];
+      galponFilter = { galponId: { in: galponIds } };
+    }
+
+    const detalles = await this.prisma.detalleGalpon.findMany({
+      where: {
+        reporte: { fecha: { gte: startOfDay, lte: endOfDay } },
+        ...galponFilter,
+      },
+      include: { galpon: { select: { codigo: true, capacidad: true, gallinasActuales: true } } },
+      orderBy: { galpon: { codigo: 'asc' } },
+    });
+
+    return detalles.map(d => {
+      const mortalidadPct = d.galpon.gallinasActuales > 0
+        ? (d.mortalidad / d.galpon.gallinasActuales) * 100
+        : 0;
+
+      let estado = 'NORMAL';
+      if (mortalidadPct > 2) estado = 'CRITICO';
+      else if (mortalidadPct > 1) estado = 'ALERTA';
+
+      return {
+        galpon: d.galpon.codigo,
+        gallinasActuales: d.galpon.gallinasActuales,
+        mortalidad: d.mortalidad,
+        mortalidadPorcentaje: Math.round(mortalidadPct * 100) / 100,
+        estado,
+      };
+    });
+  }
+
+  async getResumenDiario(usuarioId?: string, rol?: string) {
+    const fechaBase = new Date();
+    const startOfDay = new Date(fechaBase);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(fechaBase);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const reportes = await this.prisma.reporteDiario.findMany({
+      where: {
+        fecha: { gte: startOfDay, lte: endOfDay },
+        ...(rol === Rol.GALPONERO && usuarioId ? { galponeroId: usuarioId } : {}),
+      },
+      include: {
+        galponero: { select: { nombre: true, apellido: true } },
+        _count: { select: { detallesGalpon: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return reportes.map(r => ({
+      id: r.id,
+      fecha: r.fecha,
+      fuente: r.fuente,
+      estado: r.estado,
+      galponero: `${r.galponero.nombre} ${r.galponero.apellido}`,
+      detalleGalpones: r._count.detallesGalpon,
+    }));
   }
 }

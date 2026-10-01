@@ -27,9 +27,9 @@ export default function GalponesPage() {
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try { setUserRol(JSON.parse(stored).rol || ""); } catch {}
+      const userCookie = document.cookie.split('; ').find(c => c.startsWith('user='));
+      if (userCookie) {
+        try { setUserRol(JSON.parse(decodeURIComponent(userCookie.split('=').slice(1).join('='))).rol || ""); } catch {}
       }
     }
     loadGalpones();

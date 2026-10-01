@@ -2,7 +2,9 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nes
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { GalponAccessGuard } from '../../common/guards/galpon-access.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { GalponAccess } from '../../common/decorators/galpon-access.decorator';
 import { GalponesService } from './galpones.service';
 import { CreateGalponDto } from './dto/create-galpon.dto';
 import { UpdateGalponDto } from './dto/update-galpon.dto';
@@ -10,7 +12,7 @@ import { Rol } from '@prisma/client';
 
 @ApiTags('Galpones')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, GalponAccessGuard)
 @Controller('galpones')
 export class GalponesController {
   constructor(private galponesService: GalponesService) {}
@@ -29,6 +31,7 @@ export class GalponesController {
   }
 
   @Get(':id')
+  @GalponAccess()
   @ApiOperation({ summary: 'Obtener galpón' })
   findOne(@Param('id') id: string) {
     return this.galponesService.findOne(id);
@@ -36,6 +39,7 @@ export class GalponesController {
 
   @Put(':id')
   @Roles(Rol.ADMINISTRADOR, Rol.RESPONSABLE_PRODUCCION, Rol.CONTADOR)
+  @GalponAccess()
   @ApiOperation({ summary: 'Actualizar galpón' })
   update(@Param('id') id: string, @Body() dto: UpdateGalponDto) {
     return this.galponesService.update(id, dto);

@@ -22,24 +22,49 @@ export class CostsService {
     return this.prisma.categoriaCosto.findMany({ where, orderBy: { nombre: 'asc' } });
   }
 
+  async createConcepto(categoriaId: string, nombre: string, userId: string, userRol: Rol) {
+    if (userRol !== Rol.ADMINISTRADOR && userRol !== Rol.CONTADOR) {
+      throw new ForbiddenException('Solo ADMIN o CONTADOR pueden crear conceptos');
+    }
+    return this.prisma.conceptoCosto.create({
+      data: { categoriaId, nombre },
+      include: { categoria: true },
+    });
+  }
+
+  async getConceptos(categoriaId?: string) {
+    const where: any = { activo: true };
+    if (categoriaId) where.categoriaId = categoriaId;
+    return this.prisma.conceptoCosto.findMany({
+      where,
+      include: { categoria: true },
+      orderBy: { nombre: 'asc' },
+    });
+  }
+
   async createCosto(dto: CreateCostoDto, userId: string, userRol: Rol) {
     if (userRol !== Rol.ADMINISTRADOR && userRol !== Rol.CONTADOR) {
       throw new ForbiddenException('Solo ADMIN o CONTADOR pueden registrar costos');
     }
     return this.prisma.costoDirecto.create({
       data: {
-        ...dto,
+        conceptoId: dto.conceptoId,
+        descripcion: dto.descripcion,
+        monto: dto.monto,
         fecha: new Date(dto.fecha),
         fechaVencimiento: dto.fechaVencimiento ? new Date(dto.fechaVencimiento) : null,
+        comprobanteUrl: dto.comprobanteUrl,
+        observaciones: dto.observaciones,
+        galponId: dto.galponId,
         creadoPorId: userId,
       },
-      include: { categoria: true, galpon: { select: { codigo: true } } },
+      include: { concepto: { include: { categoria: true } }, galpon: { select: { codigo: true } } },
     });
   }
 
   async getCostos(params: { tipo?: string; estado?: string; fechaInicio?: string; fechaFin?: string; page?: number; limit?: number }) {
     const where: any = {};
-    if (params.tipo) where.categoria = { tipo: params.tipo };
+    if (params.tipo) where.concepto = { categoria: { tipo: params.tipo } };
     if (params.estado) where.estado = params.estado;
     if (params.fechaInicio || params.fechaFin) {
       where.fecha = {};
@@ -57,7 +82,7 @@ export class CostsService {
         skip,
         take: limit,
         orderBy: { fecha: 'desc' },
-        include: { categoria: true, galpon: { select: { codigo: true } }, creadoPor: { select: { nombre: true, apellido: true } } },
+        include: { concepto: { include: { categoria: true } }, galpon: { select: { codigo: true } }, creadoPor: { select: { nombre: true, apellido: true } } },
       }),
       this.prisma.costoDirecto.count({ where }),
     ]);
@@ -69,9 +94,10 @@ export class CostsService {
     if (userRol !== Rol.ADMINISTRADOR && userRol !== Rol.CONTADOR) {
       throw new ForbiddenException('Solo ADMIN o CONTADOR pueden aprobar costos');
     }
-    return this.prisma.costoDirecto.update({
-      where: { id },
-      data: { estado: 'APROBADO', aprobadoPorId: userId, aprobadoEn: new Date() },
+    return this.prisma.costoAprobacion.upsert({
+      where: { costoId: id },
+      update: { estado: 'APROBADO', aprobadoPorId: userId, aprobadoEn: new Date() },
+      create: { costoId: id, estado: 'APROBADO', aprobadoPorId: userId, aprobadoEn: new Date() },
     });
   }
 
@@ -79,9 +105,10 @@ export class CostsService {
     if (userRol !== Rol.ADMINISTRADOR && userRol !== Rol.CONTADOR) {
       throw new ForbiddenException('Solo ADMIN o CONTADOR pueden rechazar costos');
     }
-    return this.prisma.costoDirecto.update({
-      where: { id },
-      data: { estado: 'RECHAZADO', aprobadoPorId: userId, aprobadoEn: new Date() },
+    return this.prisma.costoAprobacion.upsert({
+      where: { costoId: id },
+      update: { estado: 'RECHAZADO', aprobadoPorId: userId, aprobadoEn: new Date() },
+      create: { costoId: id, estado: 'RECHAZADO', aprobadoPorId: userId, aprobadoEn: new Date() },
     });
   }
 
@@ -95,22 +122,26 @@ export class CostsService {
 
     const [totalDirecto, totalIndirecto, porCategoria, gastosFijos] = await Promise.all([
       this.prisma.costoDirecto.aggregate({
-        where: { ...where, estado: 'APROBADO', categoria: { tipo: 'DIRECTO' } },
+        where: { ...where, aprobacion: { estado: 'APROBADO' }, concepto: { categoria: { tipo: 'DIRECTO' } } },
         _sum: { monto: true },
         _count: true,
       }),
       this.prisma.costoDirecto.aggregate({
-        where: { ...where, estado: 'APROBADO', categoria: { tipo: 'INDIRECTO' } },
+        where: { ...where, aprobacion: { estado: 'APROBADO' }, concepto: { categoria: { tipo: 'INDIRECTO' } } },
         _sum: { monto: true },
         _count: true,
       }),
       this.prisma.costoDirecto.groupBy({
-        by: ['categoriaId'],
-        where: { ...where, estado: 'APROBADO' },
+        by: ['conceptoId'],
+        where: { ...where, aprobacion: { estado: 'APROBADO' } },
         _sum: { monto: true },
         _count: true,
       }),
-      this.prisma.gastoFijo.findMany({ where: { activo: true }, orderBy: { concepto: 'asc' } }),
+      this.prisma.gastoFijo.findMany({
+        where: { activo: true },
+        include: { concepto: true },
+        orderBy: { concepto: { nombre: 'asc' } },
+      }),
     ]);
 
     const totalGastosFijos = gastosFijos.reduce((sum, g) => sum + Number(g.monto), 0);
@@ -129,11 +160,23 @@ export class CostsService {
       throw new ForbiddenException('Solo ADMIN o CONTADOR pueden crear gastos fijos');
     }
     return this.prisma.gastoFijo.create({
-      data: { ...dto, fechaInicio: new Date(dto.fechaInicio), fechaFin: dto.fechaFin ? new Date(dto.fechaFin) : null },
+      data: {
+        conceptoId: dto.conceptoId,
+        monto: dto.monto,
+        recurrencia: dto.recurrencia,
+        diaVencimiento: dto.diaVencimiento,
+        fechaInicio: new Date(dto.fechaInicio),
+        fechaFin: dto.fechaFin ? new Date(dto.fechaFin) : null,
+        observaciones: dto.observaciones,
+      },
+      include: { concepto: true },
     });
   }
 
   async getGastosFijos() {
-    return this.prisma.gastoFijo.findMany({ orderBy: { concepto: 'asc' } });
+    return this.prisma.gastoFijo.findMany({
+      include: { concepto: true },
+      orderBy: { concepto: { nombre: 'asc' } },
+    });
   }
 }

@@ -22,7 +22,7 @@ export default function ReportsPage() {
   const loadDiario = async () => {
     setLoading(true);
     try {
-      const response = await reportsService.getDiario(fecha);
+      const response = await reportsService.getDiario({ fecha });
       setReporte(response.data);
     } catch (error) { console.error(error); }
     finally { setLoading(false); }
@@ -31,7 +31,7 @@ export default function ReportsPage() {
   const loadSemanal = async () => {
     setLoading(true);
     try {
-      const response = await reportsService.getSemanal(fechaInicio, fechaFin);
+      const response = await reportsService.getSemanal({ fechaInicio, fechaFin });
       setSemanal(response.data);
     } catch (error) { console.error(error); }
     finally { setLoading(false); }
@@ -40,7 +40,7 @@ export default function ReportsPage() {
   const loadMensual = async () => {
     setLoading(true);
     try {
-      const response = await reportsService.getMensual(anio, mes);
+      const response = await reportsService.getMensual({ anio, mes });
       setMensual(response.data);
     } catch (error) { console.error(error); }
     finally { setLoading(false); }
@@ -48,7 +48,7 @@ export default function ReportsPage() {
 
   const exportCSV = async (tipo: string) => {
     try {
-      const response = await reportsService.exportCSV(tipo, fecha);
+      const response = await reportsService.exportCSV({ tipo, fecha });
       const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');

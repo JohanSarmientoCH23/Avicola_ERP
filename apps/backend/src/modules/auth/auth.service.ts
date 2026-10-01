@@ -19,11 +19,35 @@ export class AuthService {
 
   async login(dto: LoginDto, ip?: string) {
     const user = await this.usersService.findByEmail(dto.email);
-    if (!user) throw new UnauthorizedException('Credenciales inválidas');
-    if (user.estado !== 'ACTIVO') throw new UnauthorizedException('Usuario inactivo');
+
+    if (!user) {
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
+
+    if (user.estado !== 'ACTIVO') {
+      await this.auditService.log({
+        usuarioId: user.id,
+        accion: 'LOGIN_FALLIDO',
+        entidad: 'USUARIO',
+        entidadId: user.id,
+        cambios: { razon: 'Usuario inactivo' },
+        ip,
+      }).catch(() => {});
+      throw new UnauthorizedException('Usuario inactivo');
+    }
 
     const isPasswordValid = await bcrypt.compare(dto.password, user.password);
-    if (!isPasswordValid) throw new UnauthorizedException('Credenciales inválidas');
+    if (!isPasswordValid) {
+      await this.auditService.log({
+        usuarioId: user.id,
+        accion: 'LOGIN_FALLIDO',
+        entidad: 'USUARIO',
+        entidadId: user.id,
+        cambios: { razon: 'Contraseña incorrecta' },
+        ip,
+      }).catch(() => {});
+      throw new UnauthorizedException('Credenciales inválidas');
+    }
 
     await this.usersService.updateLastLogin(user.id);
 
@@ -58,8 +82,12 @@ export class AuthService {
 
     const hashedPassword = await bcrypt.hash(dto.password, 10);
     const user = await this.usersService.create({
-      ...dto,
+      email: dto.email,
       password: hashedPassword,
+      nombre: dto.nombre,
+      apellido: dto.apellido,
+      telefono: dto.telefono,
+      rol: Rol.GALPONERO,
     });
 
     const payload = { sub: user.id, email: user.email, rol: user.rol };

@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+
+<html lang="es"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><title>AVÍCOLA ERP - Agro-Industrial Layer Management</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: 'class', theme: { extend: { colors: { 'secondary-fixed': '#6ffbbe', 'primary-fixed-dim': '#a0d1bb', 'secondary': '#006c49', 'on-secondary-fixed-variant': '#005236', 'error': '#ba1a1a', 'surface-variant': '#dae2fd', 'on-surface-variant': '#414944', 'on-tertiary-container': '#e49200', 'outline': '#717974', 'secondary-fixed-dim': '#4edea3', 'on-primary-fixed': '#002116', 'on-secondary': '#ffffff', 'inverse-primary': '#a0d1bb', 'primary-container': '#114232', 'primary-fixed': '#bbedd6', 'on-tertiary': '#ffffff', 'error-container': '#ffdad6', 'outline-variant': '#c0c8c3', 'on-secondary-container': '#00714d', 'surface-container-lowest': '#ffffff', 'surface-container-highest': '#dae2fd', 'on-background': '#131b2e', 'on-primary': '#ffffff', 'surface-container': '#eaedff', 'surface-bright': '#faf8ff', 'surface-dim': '#d2d9f4', 'on-primary-container': '#7eae99', 'inverse-on-surface': '#eef0ff', 'secondary-container': '#6cf8bb', 'on-error-container': '#93000a', 'on-tertiary-fixed': '#2a1700', 'background': '#faf8ff', 'primary': '#002b1e', 'tertiary-fixed': '#ffddb8', 'surface-tint': '#396755', 'surface-container-high': '#e2e7ff', 'on-secondary-fixed': '#002113', 'inverse-surface': '#283044', 'on-error': '#ffffff', 'tertiary-container': '#543300', 'surface': '#faf8ff', 'on-primary-fixed-variant': '#204f3e', 'tertiary': '#372000', 'tertiary-fixed-dim': '#ffb95f', 'on-surface': '#131b2e', 'surface-container-low': '#f2f3ff', 'on-tertiary-fixed-variant': '#653e00' }, borderRadius: { 'DEFAULT': '0.125rem', 'lg': '0.25rem', 'xl': '0.5rem', 'full': '0.75rem' }, spacing: { 'space-2xl': '2rem', 'space-3xl': '3rem', 'gutter-desktop': '1.25rem', 'space-sm': '0.5rem', 'space-lg': '1.25rem', 'gutter-mobile': '0.75rem', 'space-xl': '1.5rem', 'space-2xs': '0.125rem', 'space-base': '1rem', 'space-xs': '0.25rem', 'margin-desktop': '1.5rem', 'margin-mobile': '1rem', 'space-md': '0.75rem' }, fontFamily: { 'label-data-md': ['JetBrains Mono'], 'headline-md': ['Inter'], 'headline-lg-mobile': ['Inter'], 'body-lg': ['Inter'], 'headline-xl': ['Inter'], 'body-sm': ['Inter'], 'label-data-lg': ['JetBrains Mono'], 'label-ui': ['Inter'], 'headline-lg': ['Inter'], 'body-md': ['Inter'], 'label-data-sm': ['JetBrains Mono'] }, fontSize: { 'label-data-md': ['0.875rem', { lineHeight: '1.25rem', letterSpacing: '0em', fontWeight: '500' }], 'headline-md': ['1.25rem', { lineHeight: '1.75rem', letterSpacing: '-0.015em', fontWeight: '600' }], 'headline-lg-mobile': ['1.375rem', { lineHeight: '1.75rem', letterSpacing: '-0.015em', fontWeight: '600' }], 'body-lg': ['1rem', { lineHeight: '1.5rem', fontWeight: '400' }], 'headline-xl': ['2.25rem', { lineHeight: '2.75rem', letterSpacing: '-0.025em', fontWeight: '700' }], 'body-sm': ['0.75rem', { lineHeight: '1rem', fontWeight: '400' }], 'label-data-lg': ['1.125rem', { lineHeight: '1.5rem', letterSpacing: '-0.01em', fontWeight: '600' }], 'label-ui': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.04em', fontWeight: '600' }], 'headline-lg': ['1.75rem', { lineHeight: '2.25rem', letterSpacing: '-0.02em', fontWeight: '600' }], 'body-md': ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }], 'label-data-sm': ['0.75rem', { lineHeight: '1rem', letterSpacing: '0.02em', fontWeight: '500' }] } } } };</script></head><body class="bg-background font-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-72 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between overflow-hidden"><div class="flex flex-col h-full"><div class="h-16 px-space-lg flex items-center justify-between bg-surface-container-lowest"><div class="flex items-center gap-space-sm"><div class="w-9 h-9 rounded-lg bg-primary-container flex items-center justify-center overflow-hidden flex-shrink-0"><span class="material-symbols-outlined text-secondary-container text-xl">egg</span></div><div class="flex flex-col"><span class="font-headline-md text-body-lg text-primary tracking-tight font-bold leading-none">AVÍCOLA ERP</span><span class="font-label-data-sm text-[10px] text-secondary font-semibold uppercase tracking-wider mt-space-2xs">AGRO-PRO v2.4</span></div></div><button aria-label="Colapsar menú lateral" class="text-on-surface-variant hover:text-on-surface p-space-xs rounded-lg hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-xl">keyboard_double_arrow_left</span></button></div><div class="flex-1 overflow-y-auto px-space-md py-space-sm space-y-space-md"><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Principal</div><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg transition-colors bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]" data-path="dashboard" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">dashboard</span><span class="font-body-md text-body-md truncate">Dashboard Operativo</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Operaciones</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="produccion" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">factory</span><span class="font-body-md text-body-md truncate">Producción</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="galpones" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">warehouse</span><span class="font-body-md text-body-md truncate">Galpones</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="aves" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">cruelty_free</span><span class="font-body-md text-body-md truncate">Aves y Lotes</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="alimento-silos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">grain</span><span class="font-body-md text-body-md truncate">Alimento &amp; Silos</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Inventarios</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="inventario-huevos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">egg</span><span class="font-body-md text-body-md truncate">Huevos Clasificados</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="inventario-alimento" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">inventory_2</span><span class="font-body-md text-body-md truncate">Alimento &amp; Materias</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="kardex" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">receipt_long</span><span class="font-body-md text-body-md truncate">Kardex General</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="despachos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">local_shipping</span><span class="font-body-md text-body-md truncate">Despachos &amp; Logística</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Validación &amp; IA</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="ocr-vs-excel" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">document_scanner</span><span class="font-body-md text-body-md truncate">OCR vs Excel</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="conciliaciones" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">rule</span><span class="font-body-md text-body-md truncate">Conciliaciones</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="importaciones-excel" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">file_upload</span><span class="font-body-md text-body-md truncate">Importaciones Masivas</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Finanzas</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="costos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">payments</span><span class="font-body-md text-body-md truncate">Costos Operativos</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="gastos" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">price_change</span><span class="font-body-md text-body-md truncate">Gastos e Insumos</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="reportes-financieros" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">monitoring</span><span class="font-body-md text-body-md truncate">Reportes Gerenciales</span></a></nav><nav class="space-y-space-xs" data-active-classes="bg-primary-container text-on-primary font-semibold shadow-[0_1px_2px_rgba(15,23,42,0.04)]"><div class="px-space-md pt-space-xs pb-space-2xs font-label-ui text-body-sm text-on-surface-variant uppercase font-semibold tracking-wider">Sistema</div><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="auditoria" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">history</span><span class="font-body-md text-body-md truncate">Auditoría de Cambios</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="usuarios-roles" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">manage_accounts</span><span class="font-body-md text-body-md truncate">Usuarios &amp; Permisos</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors" data-path="configuracion" href="#"><span class="material-symbols-outlined text-lg flex-shrink-0">settings</span><span class="font-body-md text-body-md truncate">Parámetros Globales</span></a></nav></div><div class="p-space-md bg-surface-container-low"><div class="flex items-center justify-between p-space-sm rounded-lg bg-surface-container-lowest"><div class="flex items-center gap-space-sm overflow-hidden"><div class="w-9 h-9 rounded-full bg-primary-container flex items-center justify-center text-on-primary font-headline-md text-body-sm font-semibold flex-shrink-0">JR</div><div class="flex flex-col min-w-0"><span class="font-headline-md text-body-sm font-semibold text-on-surface truncate">Johan Ramírez</span><span class="font-label-ui text-[10px] text-on-surface-variant truncate">CONTADOR / ADMIN</span><span class="font-label-data-sm text-[10px] text-secondary font-medium truncate">Llano Grande</span></div></div><div class="flex items-center gap-space-2xs flex-shrink-0"><button aria-label="Configuración personal" class="text-on-surface-variant hover:text-on-surface p-space-xs rounded hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-lg">tune</span></button><button aria-label="Cerrar sesión" class="text-error hover:text-on-error-container p-space-xs rounded hover:bg-error-container transition-colors" type="button"><span class="material-symbols-outlined text-lg">logout</span></button></div></div></div></div></aside><div class="pl-72"><header class="fixed top-0 left-72 right-0 h-16 bg-surface-container-lowest shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-lg"><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-xs font-body-sm"><span class="text-on-surface-variant font-medium">Producción</span><span class="material-symbols-outlined text-sm text-outline-variant">chevron_right</span><span class="text-primary font-semibold">Resumen Operativo</span></div><div class="relative flex items-center w-72"><span class="material-symbols-outlined absolute left-space-sm text-outline text-lg pointer-events-none">search</span><input class="w-full h-9 pl-9 pr-8 bg-surface-container-low rounded-lg text-body-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:bg-surface-container transition-colors" placeholder="Buscar lote, galpón, guía..." type="text"/><kbd class="absolute right-space-sm px-1.5 py-0.5 rounded bg-surface-container-lowest text-on-surface-variant font-label-data-sm text-[10px] shadow-[0_1px_2px_rgba(15,23,42,0.04)]">/</kbd></div></div><div class="flex items-center gap-space-md"><div class="flex items-center bg-surface-container-low p-space-2xs rounded-lg"><button class="px-space-sm py-1 rounded text-body-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors" type="button">Hoy</button><button class="px-space-sm py-1 rounded text-body-sm font-semibold bg-surface-container-lowest text-primary shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-colors" type="button">7 Días</button><button class="px-space-sm py-1 rounded text-body-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors" type="button">30 Días</button><button class="px-space-sm py-1 rounded text-body-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-sm align-middle">date_range</span></button></div><div class="flex items-center gap-space-xs"><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container text-on-error-container font-label-data-sm text-xs font-medium"><span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>3 alertas activas</div><div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary-fixed text-on-secondary-fixed-variant font-label-data-sm text-xs font-medium"><span class="w-2 h-2 rounded-full bg-secondary"></span>Sincronizado</div></div><div class="relative"><button aria-label="Ver notificaciones" class="relative p-space-sm rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors" type="button"><span class="material-symbols-outlined text-xl">notifications</span><span class="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-error"></span></button></div><div class="flex items-center gap-space-xs pl-space-sm bg-surface-container-low hover:bg-surface-container py-1.5 px-space-md rounded-lg cursor-pointer transition-colors"><span class="material-symbols-outlined text-secondary text-lg">domain</span><div class="flex flex-col text-left"><span class="font-headline-md text-body-sm font-semibold text-on-surface leading-tight">Granja Llano Grande</span><span class="font-label-data-sm text-[10px] text-on-surface-variant leading-none">14 Galpones Activos</span></div><span class="material-symbols-outlined text-on-surface-variant text-sm ml-1">expand_more</span></div><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1WMgho3HM9U-cU1lpnOLfiaUtpnGe8Xy1WvLP4SVlYqQ2sA4M8LavNyCC2xirc8hQDAC-MP689evyOKLXagKsek0Ya1zzXDNKtLEevvKrIiz8AIApeok0BtiLnmbxVL9aQjIdV-ombhZZTpdEaRQYdpYs9Dd1p6AGTkCgNGg0Rda2-CwN7r4eVewXJxhWLPvDctiNDm_b27iozpusNuIiO3iBvpAmzH_u_fhUeM9uRbHHjT-tefKTclm-s"/></div></header><main class="relative pt-16 w-full px-space-lg bg-background min-h-screen"><div class="flex flex-col w-full pb-space-3xl space-y-space-xl">
+<!-- ================= TOP HEADER & ACTIONS ================= -->
+<section class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-space-md pt-space-md">
+<div class="flex flex-col space-y-space-2xs min-w-0">
+<div class="flex items-center gap-space-xs">
+<span class="font-label-ui text-label-ui uppercase tracking-wider text-secondary font-semibold bg-secondary-fixed/50 px-2 py-0.5 rounded">Operación en Vivo</span>
+<span class="font-label-data-sm text-label-data-sm text-outline">•</span>
+<span class="font-label-data-sm text-label-data-sm text-outline-variant font-medium">Ciclo Lote #48-C</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl text-primary tracking-tight font-bold">Resumen Operativo</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">Estado general de la operación avícola • <span class="font-semibold text-on-surface">Granja Llano Grande</span> (Sede Principal)</p>
+</div>
+<div class="flex flex-wrap items-center gap-space-sm">
+<!-- Period Selector -->
+<div class="inline-flex items-center p-1 bg-surface-container-low rounded-lg shadow-sm">
+<button class="px-3 py-1.5 rounded-md font-body-sm text-body-sm font-semibold bg-surface-container-lowest text-primary shadow-sm transition-colors" type="button">Hoy</button>
+<button class="px-3 py-1.5 rounded-md font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" type="button">7 Días</button>
+<button class="px-3 py-1.5 rounded-md font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors" type="button">30 Días</button>
+<button class="px-3 py-1.5 rounded-md font-body-sm text-body-sm text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1" type="button">
+<span>Personalizado</span>
+<span class="material-symbols-outlined text-sm">calendar_month</span>
+</button>
+</div>
+<!-- Action Buttons -->
+<button class="inline-flex items-center gap-space-xs px-3.5 py-2 bg-surface-container-lowest hover:bg-surface-container text-on-surface rounded-lg font-body-md text-body-sm font-medium shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-lg text-outline">picture_as_pdf</span>
+<span>Exportar Resumen PDF</span>
+</button>
+<button class="inline-flex items-center gap-space-xs px-4 py-2 bg-primary-container hover:bg-primary text-on-primary rounded-lg font-body-md text-body-sm font-semibold shadow-sm transition-all" type="button">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+<span>Nueva Entrada Diaria</span>
+</button>
+</div>
+</section>
+<!-- ================= KPI METRIC CARDS (6 GRIDS) ================= -->
+<section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-6 gap-space-md">
+<!-- KPI 1: Egg Production -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-secondary"></div>
+<div class="flex items-start justify-between">
+<span class="font-label-ui text-label-ui uppercase tracking-wider text-outline font-semibold">Producción Hoy</span>
+<span class="w-7 h-7 rounded-md bg-secondary-fixed/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-lg">egg</span>
+</span>
+</div>
+<div class="mt-space-sm mb-space-xs">
+<div class="font-label-data-lg text-2xl font-bold text-primary tracking-tight">24.580 <span class="text-xs font-normal text-outline">huevos</span></div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">
+<span class="material-symbols-outlined text-xs mr-0.5">trending_up</span>+8.4%
+          </span>
+<span class="font-label-data-sm text-label-data-sm text-outline">vs ayer</span>
+</div>
+</div>
+<div class="space-y-1 mt-space-2xs">
+<div class="flex justify-between font-label-data-sm text-label-data-sm text-on-surface-variant">
+<span>Meta diurna</span>
+<span class="font-semibold text-secondary">94.2%</span>
+</div>
+<div class="w-full bg-surface-container-low h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 94.2%"></div>
+</div>
+</div>
+</div>
+<!-- KPI 2: Mortality -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-secondary-container"></div>
+<div class="flex items-start justify-between">
+<span class="font-label-ui text-label-ui uppercase tracking-wider text-outline font-semibold">Mortalidad</span>
+<span class="w-7 h-7 rounded-md bg-surface-container-low flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-lg">cruelty_free</span>
+</span>
+</div>
+<div class="mt-space-sm mb-space-xs">
+<div class="font-label-data-lg text-2xl font-bold text-on-surface tracking-tight">37 <span class="text-xs font-normal text-outline">aves</span></div>
+<p class="font-label-data-sm text-label-data-sm text-outline mt-0.5">0.24% de la parvada total</p>
+</div>
+<div class="flex items-center justify-between mt-space-2xs pt-1">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-secondary-fixed/40 text-on-secondary-fixed-variant font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>&lt;0.3% Estable
+        </span>
+<svg class="w-14 h-4 text-secondary" fill="none" viewbox="0 0 56 16">
+<path d="M1 12L9 11L18 13L27 9L36 10L45 7L55 8" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"></path>
+</svg>
+</div>
+</div>
+<!-- KPI 3: Feed Consumption -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-primary-container"></div>
+<div class="flex items-start justify-between">
+<span class="font-label-ui text-label-ui uppercase tracking-wider text-outline font-semibold">Consumo Alimento</span>
+<span class="w-7 h-7 rounded-md bg-surface-container-low flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-lg">grain</span>
+</span>
+</div>
+<div class="mt-space-sm mb-space-xs">
+<div class="font-label-data-lg text-2xl font-bold text-primary tracking-tight">1.284 <span class="text-xs font-normal text-outline">kg</span></div>
+<div class="flex items-center gap-1.5 mt-1">
+<span class="inline-flex items-center px-1.5 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-secondary-fixed text-on-secondary-fixed-variant font-semibold">
+            -3.2%
+          </span>
+<span class="font-label-data-sm text-label-data-sm text-outline">vs estándar</span>
+</div>
+</div>
+<div class="mt-space-2xs font-label-data-sm text-label-data-sm text-on-surface-variant flex items-center justify-between">
+<span>Conversión:</span>
+<span class="font-semibold text-primary">112g / ave</span>
+</div>
+</div>
+<!-- KPI 4: Egg Warehouse Inventory -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-surface-variant"></div>
+<div class="flex items-start justify-between">
+<span class="font-label-ui text-label-ui uppercase tracking-wider text-outline font-semibold">Inventario Huevos</span>
+<span class="w-7 h-7 rounded-md bg-surface-container flex items-center justify-center text-on-surface">
+<span class="material-symbols-outlined text-lg">inventory_2</span>
+</span>
+</div>
+<div class="mt-space-sm mb-space-xs">
+<div class="font-label-data-lg text-2xl font-bold text-on-surface tracking-tight">48.920 <span class="text-xs font-normal text-outline">uds</span></div>
+<p class="font-label-data-sm text-label-data-sm text-outline mt-0.5">135 cajas listas embaladas</p>
+</div>
+<div class="mt-space-2xs">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-surface-container text-on-surface font-medium">
+<span class="material-symbols-outlined text-xs">local_shipping</span>Disponible despacho
+        </span>
+</div>
+</div>
+<!-- KPI 5: Inconsistencies -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-error"></div>
+<div class="flex items-start justify-between">
+<span class="font-label-ui text-label-ui uppercase tracking-wider text-outline font-semibold">Inconsistencias</span>
+<span class="w-7 h-7 rounded-md bg-error-container flex items-center justify-center text-error">
+<span class="material-symbols-outlined text-lg">warning</span>
+</span>
+</div>
+<div class="mt-space-sm mb-space-xs">
+<div class="font-label-data-lg text-2xl font-bold text-error tracking-tight">7 <span class="text-xs font-normal text-on-surface-variant">detectadas</span></div>
+<div class="mt-1">
+<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-label-data-sm font-label-data-sm bg-error-container text-on-error-container font-semibold">
+            3 urgentes (1B y 2A)
+          </span>
+</div>
+</div>
+<div class="mt-space-2xs font-body-sm text-body-sm text-outline truncate">
+        Desfase Postura vs Alimento
+      </div>
+</div>
+<!-- KPI 6: Pending Reconciliations -->
+<div class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm flex flex-col justify-between relative overflow-hidden group hover:shadow-md transition-shadow">
+<div class="absolute top-0 left-0 right-0 h-1 bg-tertiary-fixed-dim"></div>
+<div class="flex items-start justify-between">
+<span class="font-label-ui text-label-ui uppercase tracking-wider text-outline font-semibold">Conciliaciones</span>
+<span class="w-7 h-7 rounded-md bg-tertiary-fixed/40 flex items-center justify-center text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined text-lg">rule</span>
+</span>
+</div>
+<div class="mt-space-sm mb-space-xs">
+<div class="font-label-data-lg text-2xl font-bold text-on-surface tracking-tight">4 <span class="text-xs font-normal text-outline">pendientes</span></div>
+<span class="inline-flex items-center px-1.5 py-0.5 rounded text-label-data-sm font-label-data-sm bg-tertiary-fixed text-on-tertiary-fixed-variant font-medium mt-1">
+          Revisión hoy
+        </span>
+</div>
+<a class="mt-space-2xs inline-flex items-center justify-between font-label-ui text-label-ui text-secondary font-bold hover:text-primary transition-colors" href="#">
+<span>Ir a Conciliar</span>
+<span class="material-symbols-outlined text-sm">arrow_forward</span>
+</a>
+</div>
+</section>
+<!-- ================= ANALYTICS & PRODUCTION VISUALIZATION (60/40) ================= -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Main Trend Graph (60% ~ 7 cols desktop) -->
+<div class="lg:col-span-7 bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-md">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary font-bold">Producción de Huevos (Últimos 7 Días)</h2>
+<p class="font-body-sm text-body-sm text-outline">Evolución del volumen de recolección y cumplimiento de meta</p>
+</div>
+<div class="inline-flex p-0.5 bg-surface-container-low rounded-lg">
+<button class="px-2.5 py-1 text-label-ui font-label-ui rounded-md bg-surface-container-lowest text-primary font-bold shadow-sm" type="button">Día</button>
+<button class="px-2.5 py-1 text-label-ui font-label-ui rounded-md text-on-surface-variant hover:text-primary" type="button">Semana</button>
+<button class="px-2.5 py-1 text-label-ui font-label-ui rounded-md text-on-surface-variant hover:text-primary" type="button">Mes</button>
+</div>
+</div>
+<!-- Metric Highlights -->
+<div class="flex items-center gap-space-lg py-space-xs mb-space-sm">
+<div>
+<span class="font-label-ui text-label-ui text-outline uppercase block">Promedio 7D</span>
+<span class="font-label-data-md text-label-data-md font-bold text-on-surface">23.875 uds/día</span>
+</div>
+<div>
+<span class="font-label-ui text-label-ui text-outline uppercase block">Línea de Meta</span>
+<span class="font-label-data-md text-label-data-md font-bold text-on-tertiary-container">24.000 uds/día</span>
+</div>
+<div>
+<span class="font-label-ui text-label-ui text-outline uppercase block">Pico Máximo</span>
+<span class="font-label-data-md text-label-data-md font-bold text-secondary">24.580 (Hoy)</span>
+</div>
+</div>
+<!-- SVG Trend Chart with Target Line & Tooltip -->
+<div class="relative w-full h-64 mt-space-sm">
+<svg class="w-full h-full overflow-visible" preserveaspectratio="none" viewbox="0 0 700 240">
+<defs>
+<lineargradient id="eggGrad" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#006c49" stop-opacity="0.25"></stop>
+<stop offset="100%" stop-color="#006c49" stop-opacity="0.0"></stop>
+</lineargradient>
+</defs>
+<!-- Horizontal Grid lines -->
+<line stroke="#eaedff" stroke-width="1" x1="40" x2="680" y1="30" y2="30"></line>
+<line stroke="#eaedff" stroke-width="1" x1="40" x2="680" y1="90" y2="90"></line>
+<line stroke="#eaedff" stroke-width="1" x1="40" x2="680" y1="150" y2="150"></line>
+<line stroke="#eaedff" stroke-width="1" x1="40" x2="680" y1="210" y2="210"></line>
+<!-- Y-Axis Labels -->
+<text fill="#717974" font-family="JetBrains Mono" font-size="10" text-anchor="end" x="32" y="34">25.0k</text>
+<text fill="#717974" font-family="JetBrains Mono" font-size="10" text-anchor="end" x="32" y="94">24.0k</text>
+<text fill="#717974" font-family="JetBrains Mono" font-size="10" text-anchor="end" x="32" y="154">23.0k</text>
+<text fill="#717974" font-family="JetBrains Mono" font-size="10" text-anchor="end" x="32" y="214">22.0k</text>
+<!-- Target Line at 24,000 (y = 90) -->
+<line stroke="#e49200" stroke-dasharray="4 4" stroke-width="1.5" x1="40" x2="680" y1="90" y2="90"></line>
+<text fill="#e49200" font-family="JetBrains Mono" font-size="9" font-weight="600" text-anchor="end" x="680" y="84">META: 24.000</text>
+<!-- Shaded Area Chart: 
+                 Points: Lun(70, 162), Mar(170, 126), Mie(270, 144), Jue(370, 84), Vie(470, 93), Sab(570, 78), Dom(660, 55) -->
+<polygon fill="url(#eggGrad)" points="70,162 170,126 270,144 370,84 470,93 570,78 660,55 660,210 70,210"></polygon>
+<!-- Main Line -->
+<polyline fill="none" points="70,162 170,126 270,144 370,84 470,93 570,78 660,55" stroke="#006c49" stroke-linecap="round" stroke-linejoin="round" stroke-width="3"></polyline>
+<!-- Data Dots -->
+<circle cx="70" cy="162" fill="#ffffff" r="4" stroke="#006c49" stroke-width="2"></circle>
+<circle cx="170" cy="126" fill="#ffffff" r="4" stroke="#006c49" stroke-width="2"></circle>
+<circle cx="270" cy="144" fill="#ffffff" r="4" stroke="#006c49" stroke-width="2"></circle>
+<circle cx="370" cy="84" fill="#ffffff" r="4" stroke="#006c49" stroke-width="2"></circle>
+<circle cx="470" cy="93" fill="#ffffff" r="4" stroke="#006c49" stroke-width="2"></circle>
+<circle cx="570" cy="78" fill="#ffffff" r="4" stroke="#006c49" stroke-width="2"></circle>
+<!-- Active Selected Point (Hoy) -->
+<circle cx="660" cy="55" fill="#114232" r="6" stroke="#6ffbbe" stroke-width="3"></circle>
+</svg>
+<!-- Interactive Tooltip Overlay for Today -->
+<div class="absolute right-4 top-2 bg-primary text-on-primary p-2.5 rounded-lg shadow-xl pointer-events-none flex flex-col space-y-0.5 z-10">
+<span class="font-label-ui text-[10px] uppercase text-secondary-fixed font-bold tracking-wider">Hoy (Domingo)</span>
+<span class="font-label-data-md text-label-data-md font-bold">24.580 huevos</span>
+<span class="font-label-data-sm text-[11px] text-secondary-container">+580 sobre la meta</span>
+</div>
+<!-- X-Axis Labels -->
+<div class="flex justify-between pl-10 pr-2 pt-2 font-label-data-sm text-label-data-sm text-outline">
+<span>Lun 22.8k</span>
+<span>Mar 23.4k</span>
+<span>Mié 23.1k</span>
+<span>Jue 24.1k</span>
+<span>Vie 23.9k</span>
+<span>Sáb 24.2k</span>
+<span class="font-bold text-primary">Dom (Hoy)</span>
+</div>
+</div>
+</div>
+<div class="pt-space-md flex items-center justify-between font-label-data-sm text-label-data-sm text-outline bg-surface-container-low/60 -mx-space-lg -mb-space-lg px-space-lg py-space-xs rounded-b-xl">
+<span>Eficiencia global del plantel: <strong class="text-on-surface">91.8% postura</strong></span>
+<span>Sensor de banda transportadora: <strong class="text-secondary">En línea (99.9%)</strong></span>
+</div>
+</div>
+<!-- Shed Breakdown Bar Chart (40% ~ 5 cols desktop) -->
+<div class="lg:col-span-5 bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary font-bold">Producción por Galpón</h2>
+<p class="font-body-sm text-body-sm text-outline">Rendimiento individual recolectado hoy</p>
+</div>
+<span class="font-label-data-sm text-label-data-sm text-outline font-semibold">Meta: 4.000 / galpón</span>
+</div>
+<!-- Shed Production Bars -->
+<div class="space-y-3.5 mt-space-md">
+<!-- Galpón 2A: High performer -->
+<div class="space-y-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="font-semibold text-on-surface">Galpón 2A (Lohmann Brown)</span>
+<div class="flex items-center gap-2">
+<span class="font-label-data-md text-label-data-md font-bold text-primary">4.480</span>
+<span class="inline-flex px-1.5 py-0.2 rounded text-[10px] font-label-ui bg-secondary-fixed text-on-secondary-fixed-variant font-bold">+12%</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden flex">
+<div class="bg-secondary h-full rounded-full transition-all duration-500" style="width: 89.6%"></div>
+</div>
+</div>
+<!-- Galpón 1A: High performer -->
+<div class="space-y-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="font-semibold text-on-surface">Galpón 1A (Hy-Line Brown)</span>
+<div class="flex items-center gap-2">
+<span class="font-label-data-md text-label-data-md font-bold text-primary">4.250</span>
+<span class="inline-flex px-1.5 py-0.2 rounded text-[10px] font-label-ui bg-secondary-fixed text-on-secondary-fixed-variant font-bold">+6%</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden flex">
+<div class="bg-secondary h-full rounded-full transition-all duration-500" style="width: 85%"></div>
+</div>
+</div>
+<!-- Galpón 3A: Good performer -->
+<div class="space-y-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="font-semibold text-on-surface">Galpón 3A (Hy-Line Brown)</span>
+<div class="flex items-center gap-2">
+<span class="font-label-data-md text-label-data-md font-bold text-primary">4.120</span>
+<span class="inline-flex px-1.5 py-0.2 rounded text-[10px] font-label-ui bg-secondary-fixed text-on-secondary-fixed-variant font-bold">+3%</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden flex">
+<div class="bg-secondary h-full rounded-full transition-all duration-500" style="width: 82.4%"></div>
+</div>
+</div>
+<!-- Galpón 2B: Good performer -->
+<div class="space-y-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="font-semibold text-on-surface">Galpón 2B (Lohmann Brown)</span>
+<div class="flex items-center gap-2">
+<span class="font-label-data-md text-label-data-md font-bold text-primary">4.110</span>
+<span class="inline-flex px-1.5 py-0.2 rounded text-[10px] font-label-ui bg-secondary-fixed text-on-secondary-fixed-variant font-bold">+2%</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden flex">
+<div class="bg-secondary h-full rounded-full transition-all duration-500" style="width: 82.2%"></div>
+</div>
+</div>
+<!-- Galpón 1B: Minor Deficit -->
+<div class="space-y-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="font-semibold text-on-surface">Galpón 1B (Hy-Line Brown)</span>
+<div class="flex items-center gap-2">
+<span class="font-label-data-md text-label-data-md font-bold text-tertiary-container">3.920</span>
+<span class="inline-flex px-1.5 py-0.2 rounded text-[10px] font-label-ui bg-surface-container-high text-outline font-bold">-2%</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden flex">
+<div class="bg-secondary/75 h-full rounded-full transition-all duration-500" style="width: 78.4%"></div>
+</div>
+</div>
+<!-- Galpón 3B: Critical Deficit -->
+<div class="space-y-1">
+<div class="flex justify-between font-body-sm text-body-sm">
+<span class="font-semibold text-error">Galpón 3B (Lohmann Sandy)</span>
+<div class="flex items-center gap-2">
+<span class="font-label-data-md text-label-data-md font-bold text-error">3.700</span>
+<span class="inline-flex px-1.5 py-0.2 rounded text-[10px] font-label-ui bg-error-container text-on-error-container font-bold">-7.5%</span>
+</div>
+</div>
+<div class="w-full bg-surface-container-low h-3 rounded-full overflow-hidden flex">
+<div class="bg-on-tertiary-container h-full rounded-full transition-all duration-500" style="width: 74%"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between text-[11px] font-label-data-sm text-outline">
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-secondary inline-block"></span> Óptimo (&gt;4.000)</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-on-tertiary-container inline-block"></span> Observación (&lt;3.800)</span>
+<span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-error inline-block"></span> Alerta Crítica</span>
+</div>
+</div>
+</section>
+<!-- ================= MORTALITY CONTROL & SMART ALERTS (50/50) ================= -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-space-lg">
+<!-- Shed Mortality Table (6 cols) -->
+<div class="lg:col-span-6 bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between">
+<div>
+<div class="flex items-center justify-between pb-space-sm">
+<div>
+<h2 class="font-headline-md text-headline-md text-primary font-bold">Control de Mortalidad por Galpón</h2>
+<p class="font-body-sm text-body-sm text-outline">Seguimiento diario de bajas y parámetros biológicos</p>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-surface-container-low text-label-data-sm font-label-data-sm text-on-surface">
+<span class="material-symbols-outlined text-sm">health_and_safety</span>Control Sanitario
+          </span>
+</div>
+<div class="overflow-x-auto mt-space-sm">
+<table class="w-full text-left">
+<thead>
+<tr class="bg-surface-container-low text-outline font-label-ui text-label-ui uppercase tracking-wider">
+<th class="py-2.5 px-3 rounded-l-lg">Galpón</th>
+<th class="py-2.5 px-3 text-right">Parvada</th>
+<th class="py-2.5 px-3 text-right">Bajas Hoy</th>
+<th class="py-2.5 px-3 text-right">% Tasa</th>
+<th class="py-2.5 px-3 text-center rounded-r-lg">Estado</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm">
+<!-- Row 1A -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-semibold text-on-surface">Galpón 1A</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right">1.250</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right font-medium">2 aves</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right text-secondary font-semibold">0.16%</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-secondary-fixed/40 text-on-secondary-fixed-variant font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>Normal
+                  </span>
+</td>
+</tr>
+<!-- Row 1B -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-semibold text-on-surface">Galpón 1B</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right">1.230</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right font-medium text-tertiary-container font-bold">8 aves</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right text-on-tertiary-container font-bold">0.65%</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-tertiary-fixed text-on-tertiary-fixed-variant font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container"></span>Advertencia
+                  </span>
+</td>
+</tr>
+<!-- Row 2A -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-semibold text-on-surface">Galpón 2A</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right">1.300</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right font-medium">1 ave</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right text-secondary font-semibold">0.07%</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-secondary-fixed/40 text-on-secondary-fixed-variant font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>Normal
+                  </span>
+</td>
+</tr>
+<!-- Row 2B -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-semibold text-on-surface">Galpón 2B</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right">1.280</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right font-medium">4 aves</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right text-secondary font-semibold">0.31%</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-secondary-fixed/40 text-on-secondary-fixed-variant font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>Normal
+                  </span>
+</td>
+</tr>
+<!-- Row 3A -->
+<tr class="hover:bg-surface-container-low transition-colors">
+<td class="py-2.5 px-3 font-semibold text-on-surface">Galpón 3A</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right">1.290</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right font-medium">3 aves</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right text-secondary font-semibold">0.23%</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-secondary-fixed/40 text-on-secondary-fixed-variant font-medium">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>Normal
+                  </span>
+</td>
+</tr>
+<!-- Row 3B Critical -->
+<tr class="bg-error-container/20 hover:bg-error-container/40 transition-colors">
+<td class="py-2.5 px-3 font-bold text-error">Galpón 3B</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right font-medium">1.210</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right font-bold text-error">19 aves</td>
+<td class="py-2.5 px-3 font-label-data-sm text-label-data-sm text-right font-bold text-error">1.57%</td>
+<td class="py-2.5 px-3 text-center">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-label-data-sm font-label-data-sm bg-error-container text-on-error-container font-bold">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-ping"></span>Crítico
+                  </span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="mt-space-md pt-space-xs flex items-center justify-between text-body-sm font-body-sm text-outline">
+<span>Total Parvada: <strong class="text-on-surface font-label-data-sm">7.560 aves</strong></span>
+<span>Mortalidad Acumulada: <strong class="text-error font-label-data-sm">37 aves (0.48%)</strong></span>
+</div>
+</div>
+<!-- Smart AI Alerts Panel & Farm Overview (6 cols) -->
+<div class="lg:col-span-6 flex flex-col space-y-space-md">
+<div class="bg-surface-container-lowest rounded-xl p-space-lg shadow-sm flex flex-col justify-between flex-1">
+<div class="flex items-center justify-between pb-space-sm">
+<div class="flex items-center gap-space-xs">
+<span class="material-symbols-outlined text-xl text-primary">notifications_active</span>
+<div>
+<h2 class="font-headline-md text-headline-md text-primary font-bold">Alertas Inteligentes en Tiempo Real</h2>
+<p class="font-body-sm text-body-sm text-outline">Detección de anomalías de bioseguridad, OCR y logística</p>
+</div>
+</div>
+<span class="font-label-data-sm text-label-data-sm text-secondary font-bold">Motor IA Activo</span>
+</div>
+<!-- Alert Items Container -->
+<div class="space-y-space-sm mt-space-xs">
+<!-- Alert 1: Critical Mortality -->
+<div class="p-space-md rounded-xl bg-error-container/30 flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-error text-xl flex-shrink-0 mt-0.5">report_problem</span>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-headline-md text-body-sm font-bold text-error">Crítico: Mortalidad anómala en Galpón 3B (+1.57%)</span>
+<span class="font-label-data-sm text-[10px] text-outline">Hace 12 min</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Se registraron 19 bajas en las últimas 6 horas. Tasa supera umbral de bioseguridad (0.3%). Notificación prioritaria enviada a Médico Veterinario de turno.
+              </p>
+<div class="mt-space-xs flex items-center gap-space-sm">
+<button class="px-2.5 py-1 rounded bg-error text-on-error font-body-sm text-xs font-semibold hover:bg-error/90 transition-colors" type="button">
+                  Ver Protocolo Necropsia
+                </button>
+<button class="px-2.5 py-1 rounded text-error font-body-sm text-xs font-medium hover:bg-error-container/60 transition-colors" type="button">
+                  Posponer 30m
+                </button>
+</div>
+</div>
+</div>
+<!-- Alert 2: OCR vs Excel Feed Mismatch -->
+<div class="p-space-md rounded-xl bg-tertiary-fixed/30 flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-on-tertiary-container text-xl flex-shrink-0 mt-0.5">document_scanner</span>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-headline-md text-body-sm font-bold text-on-tertiary-fixed-variant">Inconsistencia OCR: Planilla física vs Excel</span>
+<span class="font-label-data-sm text-[10px] text-outline">Hace 45 min</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Planilla manual del Galpón 1B registra entrega de 220 kg de balanceado de postura, pero el registro Excel importado computa 197 kg (Diferencia: 23 kg).
+              </p>
+<div class="mt-space-xs flex items-center gap-space-sm">
+<button class="px-2.5 py-1 rounded bg-tertiary-container text-on-tertiary font-body-sm text-xs font-semibold hover:bg-tertiary-container/90 transition-colors" type="button">
+                  Comparar Escaneo vs Datos
+                </button>
+<span class="font-label-data-sm text-[11px] text-outline">Asignado a: J. Ramírez</span>
+</div>
+</div>
+</div>
+<!-- Alert 3: Feed Inventory Silo Low -->
+<div class="p-space-md rounded-xl bg-surface-container flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-primary text-xl flex-shrink-0 mt-0.5">inventory</span>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="font-headline-md text-body-sm font-bold text-primary">Inventario de Alimento: Silo #2 al 18%</span>
+<span class="font-label-data-sm text-[10px] text-outline">Hace 2 hrs</span>
+</div>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-0.5">
+                Quedan 2.4 toneladas de fórmula P-30. Al ritmo de consumo actual, la reserva cubrirá hasta mañana a las 14:00 hrs. Orden de despacho generada.
+              </p>
+<div class="mt-space-xs flex items-center gap-space-sm">
+<span class="font-label-data-sm text-[11px] font-semibold text-secondary flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">check_circle</span>Reorden automático enviado a Planta Matriz
+                </span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ================= OPERATIONAL CONTEXT PHOTO MOSAIC ================= -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-space-md">
+<div class="relative rounded-xl overflow-hidden shadow-sm h-40 group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Modern high-density poultry egg collection facility interior with clean automated conveyor belts carrying fresh brown eggs, industrial warm lighting, bio-secure controlled agricultural environment in deep dark green and slate accents" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD-EjVeB78nFjJ75WzgHm15EOFVjhH4DpTW9yLwBMQpEWEj8gpu-CufRvXNroP6pivon8ng8ikFg1Uvtvlmda_vyd_Odk4nuSBVcaH888r32HUx4qRF5nf4xKZGKaKZql7RJzjqm-41kL9qM9sD6qFeeIMbIpKci3pzxwwHowdx5GJFMRsZ7nb-6Enuq7TpqrGZ-dPmKX_L4YzimJkYTowwhRf_IBi-f0QLMzUCQ0U1RkAVl4cOpr6f"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-transparent p-space-md flex flex-col justify-end text-on-primary">
+<span class="font-label-ui text-[10px] uppercase tracking-wider text-secondary-fixed font-bold">Automatización de Cosecha</span>
+<h4 class="font-headline-md text-body-lg font-bold">Línea de Empaque Galpón 2</h4>
+</div>
+</div>
+<div class="relative rounded-xl overflow-hidden shadow-sm h-40 group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Industrial feed storage silos in a commercial layer poultry farm under clear morning light with green landscape and galvanized metal grain processing structures" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9JXjqfBa3a9pGK3bb2WmBzyBz5fxC0ZfkA_zJ35OFK0bfrUqzbVcFWCKd-3AOmDykK6bHecA-upGbnR6nExB4fs0BUoBsLmIpu1amVtH_-rTLVS1gF95lvrcZt7ULp5FBcfs94E1QM9NDXKJ5PdlyT-1eFaGhoBGqLR5EXnxw12ZM4b241YvSLdD0W5cVC1Ema81QSMimqy6NUUAKlZ3NlRP3hw1uctgtC_2th699D09QEAH9m4zM"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-transparent p-space-md flex flex-col justify-end text-on-primary">
+<span class="font-label-ui text-[10px] uppercase tracking-wider text-secondary-fixed font-bold">Almacenamiento y Silos</span>
+<h4 class="font-headline-md text-body-lg font-bold">Silos Granel Sector Norte</h4>
+</div>
+</div>
+<div class="relative rounded-xl overflow-hidden shadow-sm h-40 group">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="Quality control technician in protective bio-security suit inspecting graded brown eggs on an industrial grading table with electronic scale and verification displays" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQgBJ4hQIVm7DxG-lvvTiF6u6yKPjM1EEHBEOsTly7h3OXLmEwdDuVQr8V9ZhWWYHpdHWTtJfq89S1uz9m0jNXFinF2vikQHY9E6M5LZ5ZBlVcnDFd8X7N5PtgyS75GE3gsqnwGvIvxLpJoPYu1baPuINOFFJfzLOlbHzC6c69VtEJq-d25hMKAZceEBW5b3hyH5BEg3lC_RVGkdSVusHe3gF9_GKX5k6tCkiIlR190Eu5lvEBCbgj"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/90 via-primary/30 to-transparent p-space-md flex flex-col justify-end text-on-primary">
+<span class="font-label-ui text-[10px] uppercase tracking-wider text-secondary-fixed font-bold">Control de Calidad &amp; Trazabilidad</span>
+<h4 class="font-headline-md text-body-lg font-bold">Muestreo de Calibre &amp; Cáscara</h4>
+</div>
+</div>
+</section>
+<!-- ================= BOTTOM QUICK ACTION BAR ================= -->
+<section class="bg-surface-container-lowest rounded-xl p-space-md shadow-sm">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-space-md">
+<div class="flex items-center gap-space-sm">
+<div class="w-10 h-10 rounded-lg bg-primary-container text-on-primary flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-2xl">bolt</span>
+</div>
+<div>
+<h3 class="font-headline-md text-body-lg font-bold text-primary">Accesos Operativos Rápidos</h3>
+<p class="font-body-sm text-body-sm text-outline">Ejecuta flujos de trabajo sin abandonar el panel de control</p>
+</div>
+</div>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-space-sm">
+<!-- Action 1 -->
+<button class="flex items-center justify-center gap-space-xs px-space-md py-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-body-md text-body-sm font-semibold transition-all" type="button">
+<span class="material-symbols-outlined text-secondary text-lg">file_upload</span>
+<span class="truncate">Importar Excel</span>
+</button>
+<!-- Action 2 -->
+<button class="flex items-center justify-center gap-space-xs px-space-md py-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-body-md text-body-sm font-semibold transition-all" type="button">
+<span class="material-symbols-outlined text-secondary text-lg">document_scanner</span>
+<span class="truncate">Verificar OCR</span>
+</button>
+<!-- Action 3 -->
+<button class="flex items-center justify-center gap-space-xs px-space-md py-2.5 rounded-lg bg-surface-container-low hover:bg-surface-container text-on-surface font-body-md text-body-sm font-semibold transition-all" type="button">
+<span class="material-symbols-outlined text-secondary text-lg">receipt_long</span>
+<span class="truncate">Kardex de Postura</span>
+</button>
+<!-- Action 4 -->
+<button class="flex items-center justify-center gap-space-xs px-space-md py-2.5 rounded-lg bg-primary hover:bg-primary-container text-on-primary font-body-md text-body-sm font-semibold transition-all" type="button">
+<span class="material-symbols-outlined text-secondary-fixed text-lg">local_shipping</span>
+<span class="truncate">Despachar Camión</span>
+</button>
+</div>
+</div>
+</section>
+</div>
+<script>
+  // Micro-interaction for period toggle buttons
+  document.querySelectorAll('section button').forEach(btn => {
+    btn.addEventListener('click', function() {
+      // Gentle feedback trigger without interfering with layout
+      if (this.innerText.includes('Hoy') || this.innerText.includes('7 Días') || this.innerText.includes('30 Días')) {
+        const siblings = this.parentElement.querySelectorAll('button');
+        siblings.forEach(s => {
+          s.classList.remove('bg-surface-container-lowest', 'text-primary', 'font-semibold', 'shadow-sm');
+          s.classList.add('text-on-surface-variant');
+        });
+        this.classList.remove('text-on-surface-variant');
+        this.classList.add('bg-surface-container-lowest', 'text-primary', 'font-semibold', 'shadow-sm');
+      }
+    });
+  });
+</script></main></div></body></html>

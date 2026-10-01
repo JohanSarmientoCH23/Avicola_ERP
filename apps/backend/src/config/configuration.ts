@@ -1,10 +1,23 @@
+const validateEnv = () => {
+  const required = ['DATABASE_URL', 'JWT_SECRET'];
+  const missing = required.filter((key) => !process.env[key]);
+  if (missing.length > 0 && process.env.NODE_ENV === 'production') {
+    throw new Error(`Variables de entorno requeridas faltantes: ${missing.join(', ')}`);
+  }
+};
+
+validateEnv();
+
 export default () => ({
   port: parseInt(process.env.PORT || '3001', 10),
+  nodeEnv: process.env.NODE_ENV || 'development',
   database: {
     url: process.env.DATABASE_URL,
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'avicola_jwt_secret',
+    secret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production'
+      ? (() => { throw new Error('JWT_SECRET es requerido en producción'); })()
+      : 'avicola_jwt_secret_dev_only'),
     expiration: process.env.JWT_EXPIRATION || '24h',
   },
   minio: {

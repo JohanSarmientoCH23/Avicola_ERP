@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma.service';
 
 @Injectable()
@@ -35,11 +35,22 @@ export class ReconciliationService {
         if (diff > 100) estado = 'ERROR';
         else if (diff > 0) estado = 'REVISAR';
 
+        const conceptoNombre = `Galpón ${detalle.galpon?.codigo || ''} - ${detalle.campo}`;
+
+        let concepto = await this.prisma.conceptoConciliacion.findUnique({
+          where: { nombre: conceptoNombre },
+        });
+        if (!concepto) {
+          concepto = await this.prisma.conceptoConciliacion.create({
+            data: { nombre: conceptoNombre, modulo: 'CONCILIACION' },
+          });
+        }
+
         await this.prisma.detalleConciliacion.create({
           data: {
             conciliacionId: conciliacion.id,
             comparacionId: comp.id,
-            concepto: `Galpón ${detalle.galpon?.codigo || ''} - ${detalle.campo}`,
+            conceptoId: concepto.id,
             valorImagen: Number(detalle.valorOcr) || 0,
             valorExcel: Number(detalle.valorExcel) || 0,
             valorSistema: Number(detalle.valorOcr) || 0,
@@ -57,23 +68,34 @@ export class ReconciliationService {
     const conciliacion = await this.prisma.conciliacion.findUnique({
       where: { id },
       include: {
-        detalles: { orderBy: { concepto: 'asc' } },
+        detalles: {
+          include: { concepto: true },
+          orderBy: { concepto: { nombre: 'asc' } },
+        },
+        aprobadoPor: { select: { id: true, nombre: true, apellido: true, email: true } },
       },
     });
     if (!conciliacion) throw new NotFoundException('Conciliación no encontrada');
     return conciliacion;
   }
 
-  async findAll(pagination: { page: number; limit: number }) {
+  async findAll(pagination: { page: number; limit: number }, filters?: { estado?: string }) {
     const skip = (pagination.page - 1) * pagination.limit;
+    const where: any = {};
+    if (filters?.estado) where.estado = filters.estado;
+
     const [data, total] = await Promise.all([
       this.prisma.conciliacion.findMany({
         skip,
         take: pagination.limit,
+        where,
         orderBy: { fecha: 'desc' },
-        include: { _count: { select: { detalles: true } } },
+        include: {
+          _count: { select: { detalles: true } },
+          aprobadoPor: { select: { nombre: true, apellido: true } },
+        },
       }),
-      this.prisma.conciliacion.count(),
+      this.prisma.conciliacion.count({ where }),
     ]);
     return { data, total, page: pagination.page, totalPages: Math.ceil(total / pagination.limit) };
   }
@@ -81,6 +103,9 @@ export class ReconciliationService {
   async approve(id: string, usuarioId: string) {
     const conciliacion = await this.prisma.conciliacion.findUnique({ where: { id } });
     if (!conciliacion) throw new NotFoundException('Conciliación no encontrada');
+    if (conciliacion.estado === 'APROBADA') {
+      throw new ConflictException('La conciliación ya está aprobada');
+    }
 
     return this.prisma.conciliacion.update({
       where: { id },
@@ -92,10 +117,35 @@ export class ReconciliationService {
     });
   }
 
-  async reject(id: string, observaciones: string) {
+  async reject(id: string, observaciones: string, usuarioId: string) {
+    const conciliacion = await this.prisma.conciliacion.findUnique({ where: { id } });
+    if (!conciliacion) throw new NotFoundException('Conciliación no encontrada');
+    if (conciliacion.estado === 'APROBADA') {
+      throw new ForbiddenException('No se puede rechazar una conciliación aprobada');
+    }
+
     return this.prisma.conciliacion.update({
       where: { id },
-      data: { estado: 'RECHAZADA', observaciones },
+      data: {
+        estado: 'RECHAZADA',
+        observaciones,
+      },
+    });
+  }
+
+  async requestCorrection(id: string, observaciones: string, usuarioId: string) {
+    const conciliacion = await this.prisma.conciliacion.findUnique({ where: { id } });
+    if (!conciliacion) throw new NotFoundException('Conciliación no encontrada');
+    if (conciliacion.estado === 'APROBADA') {
+      throw new ForbiddenException('No se puede solicitar corrección de una conciliación aprobada');
+    }
+
+    return this.prisma.conciliacion.update({
+      where: { id },
+      data: {
+        estado: 'CORRECCION_SOLICITADA',
+        observaciones,
+      },
     });
   }
 }
