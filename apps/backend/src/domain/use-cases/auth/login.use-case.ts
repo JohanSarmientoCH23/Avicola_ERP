@@ -28,6 +28,9 @@ export class LoginUseCase {
     private readonly auditPort: IAuditPort,
     private readonly bcryptCompare: (password: string, hash: string) => Promise<boolean>,
     private readonly bcryptHash: (password: string, rounds: number) => Promise<string>,
+    private readonly refreshTokenStore?: {
+      save: (userId: string, token: string, expiresAt: Date) => Promise<void>;
+    },
   ) {}
 
   async execute(command: LoginCommand): Promise<LoginResult> {
@@ -91,7 +94,9 @@ export class LoginUseCase {
 
   private async generateRefreshToken(userId: string): Promise<string> {
     const token = this.jwtPort.sign({ sub: userId }, { expiresIn: '7d' });
-    // Note: refresh token persistence handled by infrastructure
+    if (this.refreshTokenStore) {
+      await this.refreshTokenStore.save(userId, token, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+    }
     return token;
   }
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { reportsService } from "@/lib/api";
+import { localDateString, formatDateOnly } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function ReportsPage() {
-  const [fecha, setFecha] = useState(new Date().toISOString().split("T")[0]);
-  const [fechaInicio, setFechaInicio] = useState(new Date(Date.now() - 6 * 86400000).toISOString().split("T")[0]);
-  const [fechaFin, setFechaFin] = useState(new Date().toISOString().split("T")[0]);
+  const [fecha, setFecha] = useState(localDateString());
+  const [fechaInicio, setFechaInicio] = useState(localDateString(new Date(Date.now() - 6 * 86400000)));
+  const [fechaFin, setFechaFin] = useState(localDateString());
   const [anio, setAnio] = useState(new Date().getFullYear());
   const [mes, setMes] = useState(new Date().getMonth() + 1);
   const [reporte, setReporte] = useState<any>(null);
@@ -67,8 +68,8 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Reportes</h1>
-          <p className="text-muted-foreground text-sm">Generacion de reportes diarios, semanales y mensuales</p>
+          <h1 className="page-title">Reportes</h1>
+          <p className="page-subtitle">Generacion de reportes diarios, semanales y mensuales</p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Button variant="outline" onClick={() => exportCSV("diario")}>Exportar CSV</Button>
@@ -89,7 +90,7 @@ export default function ReportsPage() {
             <CardContent className="space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                 <Input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} className="w-full sm:w-40" />
-                <Button onClick={loadDiario} disabled={loading} className="bg-green-600 hover:bg-green-700 sm:w-auto">
+                <Button onClick={loadDiario} disabled={loading}>
                   {loading ? "Cargando..." : "Generar Reporte"}
                 </Button>
               </div>
@@ -97,17 +98,17 @@ export default function ReportsPage() {
                 <div className="space-y-4">
                   <p className="text-sm text-muted-foreground">Fecha: {fecha} | Reportes encontrados: {reporte.reportes?.length || 0}</p>
                   {reporte.reportes?.map((r: any) => (
-                    <div key={r.id} className="border rounded-lg p-4">
+                    <div key={r.id} className="border border-line rounded-xl p-4 bg-surface-low/40">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium">Reporte de {r.galponero?.nombre} {r.galponero?.apellido}</span>
-                        <span className="text-sm text-muted-foreground">{r.fuente}</span>
+                        <span className="font-semibold text-ink">Reporte de {r.galponero?.nombre} {r.galponero?.apellido}</span>
+                        <span className="badge-info">{r.fuente}</span>
                       </div>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                          <thead><tr className="border-b"><th className="p-1 text-left">Galpon</th><th className="p-1 text-right">Mort.</th><th className="p-1 text-right">Prod.</th><th className="p-1 text-right">Consumo</th></tr></thead>
+                          <thead><tr className="table-header"><th className="px-3 py-2 text-left rounded-l-lg">Galpón</th><th className="px-3 py-2 text-right">Mort.</th><th className="px-3 py-2 text-right">Prod.</th><th className="px-3 py-2 text-right rounded-r-lg">Consumo</th></tr></thead>
                           <tbody>
                             {r.detallesGalpon?.map((d: any) => (
-                              <tr key={d.id} className="border-b"><td className="p-1">{d.galpon?.codigo}</td><td className="p-1 text-right">{d.mortalidad}</td><td className="p-1 text-right">{d.produccion}</td><td className="p-1 text-right">{d.alimentoConsumo}</td></tr>
+                              <tr key={d.id} className="table-row"><td className="px-3 py-2.5 font-medium">{d.galpon?.codigo}</td><td className="px-3 py-2.5 text-right text-error">{d.mortalidad}</td><td className="px-3 py-2.5 text-right font-mono">{d.produccion}</td><td className="px-3 py-2.5 text-right">{d.alimentoConsumo}</td></tr>
                             ))}
                           </tbody>
                         </table>
@@ -133,7 +134,7 @@ export default function ReportsPage() {
                   <label className="text-sm font-medium">Hasta</label>
                   <Input type="date" value={fechaFin} onChange={(e) => setFechaFin(e.target.value)} className="w-full sm:w-40 mt-1" />
                 </div>
-                <Button onClick={loadSemanal} disabled={loading} className="bg-green-600 hover:bg-green-700 sm:mt-5">
+                <Button onClick={loadSemanal} disabled={loading}>
                   {loading ? "Cargando..." : "Generar"}
                 </Button>
               </div>
@@ -143,25 +144,25 @@ export default function ReportsPage() {
                   {semanal.resumen?.length > 0 && (
                     <>
                       <ResponsiveContainer width="100%" height={300}>
-                        <BarChart data={semanal.resumen.map((r: any) => ({ fecha: new Date(r.fecha).toLocaleDateString(), produccion: r.totalProduccion, mortalidad: r.totalMortalidad }))}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="fecha" />
-                          <YAxis />
-                          <Tooltip />
-                          <Bar dataKey="produccion" fill="#16a34a" name="Produccion" />
-                          <Bar dataKey="mortalidad" fill="#dc2626" name="Mortalidad" />
+                        <BarChart data={semanal.resumen.map((r: any) => ({ fecha: formatDateOnly(r.fecha), produccion: r.totalProduccion, mortalidad: r.totalMortalidad }))}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#e4ebe7" vertical={false} />
+                          <XAxis dataKey="fecha" tick={{ fontSize: 10, fill: "#8a968f" }} tickLine={false} axisLine={false} />
+                          <YAxis tick={{ fontSize: 10, fill: "#8a968f" }} tickLine={false} axisLine={false} width={54} />
+                          <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid #e4ebe7", fontSize: 12 }} />
+                          <Bar dataKey="produccion" fill="#0a8a5f" radius={[6, 6, 0, 0]} name="Producción" />
+                          <Bar dataKey="mortalidad" fill="#d92d20" radius={[6, 6, 0, 0]} name="Mortalidad" />
                         </BarChart>
                       </ResponsiveContainer>
                       <div className="overflow-x-auto">
                         <table className="w-full text-sm">
-                          <thead><tr className="border-b"><th className="p-2 text-left">Fecha</th><th className="p-2 text-right">Produccion</th><th className="p-2 text-right">Mortalidad</th><th className="p-2 text-right">Consumo</th></tr></thead>
+                          <thead><tr className="table-header"><th className="px-3 py-2.5 text-left rounded-l-lg">Fecha</th><th className="px-3 py-2.5 text-right">Producción</th><th className="px-3 py-2.5 text-right">Mortalidad</th><th className="px-3 py-2.5 text-right rounded-r-lg">Consumo</th></tr></thead>
                           <tbody>
                             {semanal.resumen.map((r: any, i: number) => (
-                              <tr key={i} className="border-b">
-                                <td className="p-2">{new Date(r.fecha).toLocaleDateString()}</td>
-                                <td className="p-2 text-right">{r.totalProduccion.toLocaleString()}</td>
-                                <td className="p-2 text-right text-red-600">{r.totalMortalidad.toLocaleString()}</td>
-                                <td className="p-2 text-right">{r.totalConsumo.toLocaleString()} kg</td>
+                              <tr key={i} className="table-row">
+                                <td className="px-3 py-3 text-ink-soft">{formatDateOnly(r.fecha)}</td>
+                                <td className="px-3 py-3 text-right font-mono font-semibold text-ink">{r.totalProduccion.toLocaleString()}</td>
+                                <td className="px-3 py-3 text-right text-error font-mono">{r.totalMortalidad.toLocaleString()}</td>
+                                <td className="px-3 py-3 text-right text-ink-soft font-mono">{r.totalConsumo.toLocaleString()} kg</td>
                               </tr>
                             ))}
                           </tbody>
@@ -184,27 +185,27 @@ export default function ReportsPage() {
                   {Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={i + 1}>{new Date(2024, i).toLocaleString("es", { month: "long" })}</option>)}
                 </select>
                 <Input type="number" value={anio} onChange={e => setAnio(Number(e.target.value))} className="w-full sm:w-24" />
-                <Button onClick={loadMensual} disabled={loading} className="bg-green-600 hover:bg-green-700 sm:w-auto">
+                <Button onClick={loadMensual} disabled={loading}>
                   {loading ? "Cargando..." : "Generar"}
                 </Button>
               </div>
               {mensual && (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <div className="border rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground">Produccion Total</p>
-                    <p className="text-2xl font-bold">{mensual.totalProduccion?.toLocaleString()}</p>
+                  <div className="metric-tile">
+                    <p className="eyebrow">Producción Total</p>
+                    <p className="text-2xl font-extrabold text-ink mt-1 font-mono">{mensual.totalProduccion?.toLocaleString()}</p>
                   </div>
-                  <div className="border rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground">Mortalidad Total</p>
-                    <p className="text-2xl font-bold text-red-600">{mensual.totalMortalidad?.toLocaleString()}</p>
+                  <div className="metric-tile">
+                    <p className="eyebrow">Mortalidad Total</p>
+                    <p className="text-2xl font-extrabold text-error mt-1 font-mono">{mensual.totalMortalidad?.toLocaleString()}</p>
                   </div>
-                  <div className="border rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground">Consumo Total</p>
-                    <p className="text-2xl font-bold">{mensual.totalConsumo?.toLocaleString()} kg</p>
+                  <div className="metric-tile">
+                    <p className="eyebrow">Consumo Total</p>
+                    <p className="text-2xl font-extrabold text-ink mt-1 font-mono">{mensual.totalConsumo?.toLocaleString()} <span className="text-xs font-medium text-ink-soft">kg</span></p>
                   </div>
-                  <div className="border rounded-lg p-4">
-                    <p className="text-sm text-muted-foreground">Dias Reportados</p>
-                    <p className="text-2xl font-bold">{mensual.diasReportados}</p>
+                  <div className="metric-tile">
+                    <p className="eyebrow">Días Reportados</p>
+                    <p className="text-2xl font-extrabold text-ink mt-1 font-mono">{mensual.diasReportados}</p>
                   </div>
                 </div>
               )}

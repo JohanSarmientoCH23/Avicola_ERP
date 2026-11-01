@@ -113,7 +113,7 @@ export default function GalponesPage() {
           <h1 className="text-xl sm:text-2xl font-bold">Galpones</h1>
           <p className="text-muted-foreground text-sm">Gestion de galpones de la granja</p>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700 sm:w-auto" onClick={openNew}>+ Nuevo Galpon</Button>
+        <Button className="bg-brand hover:bg-brand-strong sm:w-auto" onClick={openNew}>+ Nuevo Galpon</Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -125,7 +125,7 @@ export default function GalponesPage() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-xl">Galpon {galpon.codigo}</CardTitle>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    galpon.estado === "ACTIVO" ? "bg-green-100 text-green-700" :
+                    galpon.estado === "ACTIVO" ? "bg-green-100 text-brand-strong" :
                     galpon.estado === "MANTENIMIENTO" ? "bg-yellow-100 text-yellow-700" :
                     "bg-red-100 text-red-700"
                   }`}>{galpon.estado}</span>
@@ -152,7 +152,7 @@ export default function GalponesPage() {
                 </div>
                 <div className="pt-2 border-t">
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: `${Math.min(ocupacion, 100)}%` }}></div>
+                    <div className="bg-brand h-2 rounded-full" style={{ width: `${Math.min(ocupacion, 100)}%` }}></div>
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
@@ -161,7 +161,7 @@ export default function GalponesPage() {
                     {galpon.estado === "ACTIVO" ? "Mantenimiento" : "Activar"}
                   </Button>
                   {userRol === "ADMINISTRADOR" && (
-                    <Button size="sm" variant="outline" className="text-red-600 border-red-300 hover:bg-red-50" onClick={() => deleteGalpon(galpon)}>Eliminar</Button>
+                    <Button size="sm" variant="outline" className="text-error border-red-300 hover:bg-error-container" onClick={() => deleteGalpon(galpon)}>Eliminar</Button>
                   )}
                 </div>
               </CardContent>

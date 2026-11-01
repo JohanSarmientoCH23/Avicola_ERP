@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { costsService } from "@/lib/api";
+import { formatDateOnly } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,7 +110,7 @@ export default function CostsPage() {
     { name: "Gastos Fijos", value: resumen?.gastosFijosMensuales || 0 },
   ].filter(d => d.value > 0);
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="flex items-center gap-3 text-gray-500"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /><span className="text-sm font-medium">Cargando costos...</span></div></div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="flex items-center gap-3 text-ink-soft"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /><span className="text-sm font-medium">Cargando costos...</span></div></div>;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -120,15 +121,15 @@ export default function CostsPage() {
         </div>
         <div className="flex gap-2 flex-wrap">
           <Button variant="outline" onClick={() => setShowCatForm(true)}>Nueva Categoria</Button>
-          <Button className="bg-green-600 hover:bg-green-700" onClick={() => setShowForm(true)}>Registrar Costo</Button>
+          <Button className="bg-brand hover:bg-brand-strong" onClick={() => setShowForm(true)}>Registrar Costo</Button>
         </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Costos Directos</p><p className="text-2xl font-bold">${resumen?.directo?.total?.toLocaleString() || "0"}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Costos Indirectos</p><p className="text-2xl font-bold">${resumen?.indirecto?.total?.toLocaleString() || "0"}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Gastos Fijos Mensuales</p><p className="text-2xl font-bold">${resumen?.gastosFijosMensuales?.toLocaleString() || "0"}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-sm text-gray-500">Total General</p><p className="text-2xl font-bold text-green-700">${resumen?.totalGeneral?.toLocaleString() || "0"}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-ink-soft">Costos Directos</p><p className="text-2xl font-bold">${resumen?.directo?.total?.toLocaleString() || "0"}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-ink-soft">Costos Indirectos</p><p className="text-2xl font-bold">${resumen?.indirecto?.total?.toLocaleString() || "0"}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-ink-soft">Gastos Fijos Mensuales</p><p className="text-2xl font-bold">${resumen?.gastosFijosMensuales?.toLocaleString() || "0"}</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-sm text-ink-soft">Total General</p><p className="text-2xl font-bold text-brand-strong">${resumen?.totalGeneral?.toLocaleString() || "0"}</p></CardContent></Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
@@ -145,7 +146,7 @@ export default function CostsPage() {
                   <Bar dataKey="total" fill="#145a3c" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
-            ) : <p className="text-center text-gray-400 py-8 text-sm">Sin datos</p>}
+            ) : <p className="text-center text-outline py-8 text-sm">Sin datos</p>}
           </CardContent>
         </Card>
         <Card>
@@ -160,7 +161,7 @@ export default function CostsPage() {
                   <Tooltip formatter={(v: number) => `$${v.toLocaleString()}`} />
                 </PieChart>
               </ResponsiveContainer>
-            ) : <p className="text-center text-gray-400 py-8 text-sm">Sin datos</p>}
+            ) : <p className="text-center text-outline py-8 text-sm">Sin datos</p>}
           </CardContent>
         </Card>
       </div>
@@ -200,7 +201,7 @@ export default function CostsPage() {
               <tbody>
                 {filteredCostos.map((c) => (
                   <tr key={c.id} className="table-row">
-                    <td className="p-2">{new Date(c.fecha).toLocaleDateString()}</td>
+                    <td className="p-2">{formatDateOnly(c.fecha)}</td>
                     <td className="p-2">{c.categoria?.nombre}</td>
                     <td className="p-2"><span className={`status-badge ${c.categoria?.tipo === "DIRECTO" ? "info" : "warning"}`}>{c.categoria?.tipo}</span></td>
                     <td className="p-2">{c.descripcion}</td>
@@ -212,15 +213,15 @@ export default function CostsPage() {
                     <td className="p-2 text-center">
                       {c.estado === "PENDIENTE" && (
                         <div className="flex gap-1 justify-center">
-                          <Button size="sm" variant="outline" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => approveCosto(c.id)}>Aprobar</Button>
-                          <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => rejectCosto(c.id)}>Rechazar</Button>
+                          <Button size="sm" variant="outline" className="text-brand-strong border-green-200 hover:bg-brand-soft" onClick={() => approveCosto(c.id)}>Aprobar</Button>
+                          <Button size="sm" variant="outline" className="text-error border-red-200 hover:bg-error-container" onClick={() => rejectCosto(c.id)}>Rechazar</Button>
                         </div>
                       )}
                     </td>
                   </tr>
                 ))}
                 {filteredCostos.length === 0 && (
-                  <tr><td colSpan={8} className="p-4 text-center text-gray-400">No hay costos registrados</td></tr>
+                  <tr><td colSpan={8} className="p-4 text-center text-outline">No hay costos registrados</td></tr>
                 )}
               </tbody>
             </table>
@@ -255,20 +256,20 @@ export default function CostsPage() {
               </tbody>
             </table>
           </div>
-          <div className="mt-4 border-t border-gray-100 pt-4">
-            <h4 className="font-medium text-gray-700 mb-3">Agregar Gasto Fijo</h4>
+          <div className="mt-4 border-t border-line pt-4">
+            <h4 className="font-medium text-ink mb-3">Agregar Gasto Fijo</h4>
             <div className="flex gap-2 flex-wrap items-end">
-              <div><label className="text-xs text-gray-500">Concepto</label><Input placeholder="Concepto" value={gastoForm.concepto} onChange={e => setGastoForm({...gastoForm, concepto: e.target.value})} className="w-48" /></div>
-              <div><label className="text-xs text-gray-500">Monto</label><Input placeholder="Monto" type="number" value={gastoForm.monto} onChange={e => setGastoForm({...gastoForm, monto: e.target.value})} className="w-32" /></div>
-              <div><label className="text-xs text-gray-500">Recurrencia</label>
+              <div><label className="text-xs text-ink-soft">Concepto</label><Input placeholder="Concepto" value={gastoForm.concepto} onChange={e => setGastoForm({...gastoForm, concepto: e.target.value})} className="w-48" /></div>
+              <div><label className="text-xs text-ink-soft">Monto</label><Input placeholder="Monto" type="number" value={gastoForm.monto} onChange={e => setGastoForm({...gastoForm, monto: e.target.value})} className="w-32" /></div>
+              <div><label className="text-xs text-ink-soft">Recurrencia</label>
                 <select className="input-field w-auto text-sm" value={gastoForm.recurrencia} onChange={e => setGastoForm({...gastoForm, recurrencia: e.target.value})}>
                   <option value="MENSUAL">Mensual</option>
                   <option value="QUINCENAL">Quincenal</option>
                   <option value="ANUAL">Anual</option>
                 </select>
               </div>
-              <div><label className="text-xs text-gray-500">Dia venc.</label><Input placeholder="Dia" type="number" value={gastoForm.diaVencimiento} onChange={e => setGastoForm({...gastoForm, diaVencimiento: e.target.value})} className="w-20" /></div>
-              <Button size="sm" className="bg-green-600 hover:bg-green-700" onClick={createGastoFijo}>Agregar</Button>
+              <div><label className="text-xs text-ink-soft">Dia venc.</label><Input placeholder="Dia" type="number" value={gastoForm.diaVencimiento} onChange={e => setGastoForm({...gastoForm, diaVencimiento: e.target.value})} className="w-20" /></div>
+              <Button size="sm" className="bg-brand hover:bg-brand-strong" onClick={createGastoFijo}>Agregar</Button>
             </div>
           </div>
         </CardContent>
@@ -289,7 +290,7 @@ export default function CostsPage() {
               <Input placeholder="Observaciones (opcional)" value={form.observaciones} onChange={e => setForm({...form, observaciones: e.target.value})} />
               <div className="flex gap-2 justify-end pt-2">
                 <Button variant="outline" onClick={() => setShowForm(false)}>Cancelar</Button>
-                <Button className="bg-green-600 hover:bg-green-700" onClick={createCosto}>Guardar</Button>
+                <Button className="bg-brand hover:bg-brand-strong" onClick={createCosto}>Guardar</Button>
               </div>
             </div>
           </div>
@@ -309,7 +310,7 @@ export default function CostsPage() {
               </select>
               <div className="flex gap-2 justify-end pt-2">
                 <Button variant="outline" onClick={() => setShowCatForm(false)}>Cancelar</Button>
-                <Button className="bg-green-600 hover:bg-green-700" onClick={createCategoria}>Crear</Button>
+                <Button className="bg-brand hover:bg-brand-strong" onClick={createCategoria}>Crear</Button>
               </div>
             </div>
           </div>

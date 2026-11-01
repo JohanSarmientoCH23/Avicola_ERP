@@ -72,10 +72,9 @@ const HEADER_ALIASES: Record<string, string[]> = {
   entradas: ['entradas', 'entrada', 'input', 'inputs'],
   salidas: ['salidas', 'salida', 'output', 'outputs', 'despacho', 'despachos'],
   tipo: ['tipo', 'type', 'clasificacion'],
-  Silo: ['silo', 'silos', 'silo_id'],
+  silo: ['silo', 'silos', 'silo_id'],
   bultos: ['bultos', 'bulto', 'sacos', 'bags', 'sack'],
   peso: ['peso', 'weight', 'peso_total', 'kg'],
-  Gallinas: ['gallinas', 'aves', 'aves_actuales', 'gallinas_actuales'],
   lote: ['lote', 'lote_id', 'batch'],
   novedades: ['novedades', 'observaciones', 'obs', 'notes', 'remarks', 'comentario', 'comentarios'],
 };
@@ -161,7 +160,7 @@ export function detectSheetType(sheetName: string): string | null {
     silos_alimento: ['silo', 'silos', 'silos alim', 'silos alimento', 'silo alimento', 'feed silo', 'silos alimentacion'],
     bultos_alimento: ['bulto', 'bultos', 'bultos alim', 'bultos alimento', 'bulto alimento', 'feed bags', 'sacos'],
     postura: ['postura', 'production', 'produccion', 'egg production', 'postura diaria'],
-    saldos: ['s.f inv', 's.f. inv', 'saldos', 'inventory', 'inventario', 'saldo', 'stock'],
+    saldos: ['sf inv', 'sf. inv', 's.f inv', 's.f. inv', 'saldos', 'inventory', 'inventario', 'saldo', 'stock'],
   };
 
   for (const [type, patterns] of Object.entries(sheetPatterns)) {

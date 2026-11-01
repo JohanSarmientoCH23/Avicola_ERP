@@ -152,12 +152,20 @@ export class ExcelService {
       });
     }
 
+    const fechaReporte = analysis.fecha || new Date();
+
+    const datosParseados: any = {
+      ...(analysis as any),
+      galpones: this.buildGalponesForComparacion(analysis),
+      huevos: this.buildHuevosForComparacion(analysis),
+    };
+
     const savedReport = await this.prisma.reporteExcel.create({
       data: {
-        fecha: analysis.fecha || new Date(),
+        fecha: fechaReporte,
         nombreArchivo: analysis.nombreArchivo,
         archivoUrl: filePath,
-        datosParseados: analysis as any,
+        datosParseados,
         estado: 'PROCESADO',
         responsableId: usuarioId,
       },
@@ -167,7 +175,7 @@ export class ExcelService {
 
     for (const hoja of analysis.hojas) {
       if (hoja.tipoDetectado === 'clasificacion' && hoja.datos.length > 0) {
-        registrosCreados += await this.saveClasificacion(hoja.datos, analysis.fecha);
+        registrosCreados += await this.saveClasificacion(hoja.datos, fechaReporte, usuarioId, savedReport.id);
       }
     }
 
@@ -210,33 +218,147 @@ export class ExcelService {
     }
   }
 
-  private async saveClasificacion(datos: any[], fechaBase: Date | null): Promise<number> {
+  private buildGalponesForComparacion(analysis: ParsedExcelData): any[] {
+    const galpones = new Map<string, any>();
+
+    for (const hoja of analysis.hojas) {
+      if (!['aves', 'postura'].includes(hoja.tipoDetectado || '')) continue;
+      for (const reg of hoja.datos) {
+        const codigo = String(reg.galpon || '').toUpperCase().trim();
+        if (!codigo) continue;
+        if (!galpones.has(codigo)) {
+          galpones.set(codigo, {
+            codigo,
+            mortalidad: 0,
+            produccion: 0,
+            alimentoConsumo: 0,
+            alimentoEntrada: 0,
+            gallinas: 0,
+          });
+        }
+        const g = galpones.get(codigo);
+        g.mortalidad += Number(reg.mortalidad) || 0;
+        g.produccion += Number(reg.produccion) || 0;
+        g.alimentoConsumo += Number(reg.consumo) || 0;
+        g.alimentoEntrada += Number(reg.alimentoEntrada) || 0;
+        g.gallinas = Number(reg.gallinas) || g.gallinas;
+      }
+    }
+
+    return Array.from(galpones.values());
+  }
+
+  private buildHuevosForComparacion(analysis: ParsedExcelData): any[] {
+    const huevos = new Map<string, number>();
+    const FIELDS = ['jumbo', 'extra', 'aa', 'a', 'b', 'revoltura', 'c', 'pipo', 'blanco', 'sucio', 'roto', 'yemas'];
+
+    for (const hoja of analysis.hojas) {
+      if (hoja.tipoDetectado !== 'clasificacion') continue;
+      for (const reg of hoja.datos) {
+        for (const field of FIELDS) {
+          const val = Number(reg[field]) || 0;
+          if (val > 0) {
+            huevos.set(field.toUpperCase(), (huevos.get(field.toUpperCase()) || 0) + val);
+          }
+        }
+      }
+    }
+
+    return Array.from(huevos.entries()).map(([codigo, cantidad]) => ({ codigo, cantidad }));
+  }
+
+  private async saveClasificacion(
+    datos: any[],
+    fechaBase: Date | null,
+    usuarioId: string,
+    reporteId: string,
+  ): Promise<number> {
+    const eggTypes = await this.prisma.tipoHuevo.findMany();
+    const eggMap = new Map(eggTypes.map(t => [String(t.codigo).toUpperCase(), t.id]));
+
+    const EGG_FIELDS = ['jumbo', 'extra', 'aa', 'a', 'b', 'revoltura', 'c', 'pipo', 'blanco', 'sucio', 'roto', 'yemas'];
+
     let count = 0;
 
+    const movimientos: Array<{ fecha: Date; tipoHuevoId: string; cantidad: number; galpon: string }> = [];
+
     for (const registro of datos) {
-      const fecha = registro.fecha || fechaBase || new Date();
+      const fecha = new Date(registro.fecha || fechaBase || new Date());
+      fecha.setHours(0, 0, 0, 0);
       const galpon = registro.galpon;
 
-      const galponRecord = await this.prisma.galpon.findUnique({
-        where: { codigo: galpon },
-      });
-
+      const galponRecord = await this.prisma.galpon.findUnique({ where: { codigo: galpon } });
       if (!galponRecord) continue;
 
-      const eggTypes = await this.prisma.tipoHuevo.findMany();
-      const eggMap = new Map(eggTypes.map(t => [t.codigo, t.id]));
-
-      for (const [tipoCodigo, cantidad] of Object.entries(registro)) {
-        if (['fecha', 'galpon', 'total', 'rowIndex'].includes(tipoCodigo)) continue;
-        const numCantidad = Number(cantidad) || 0;
+      for (const field of EGG_FIELDS) {
+        const numCantidad = Number(registro[field]) || 0;
         if (numCantidad <= 0) continue;
 
-        const tipoHuevoId = eggMap.get(tipoCodigo as any);
+        const tipoHuevoId = eggMap.get(field.toUpperCase());
         if (!tipoHuevoId) continue;
 
+        movimientos.push({ fecha, tipoHuevoId, cantidad: numCantidad, galpon });
         count++;
       }
     }
+
+    if (movimientos.length === 0) return 0;
+
+    await this.prisma.$transaction(async tx => {
+      for (const mov of movimientos) {
+        const existing = await tx.inventarioHuevo.findUnique({
+          where: {
+            tipoHuevoId_fecha: {
+              tipoHuevoId: mov.tipoHuevoId,
+              fecha: mov.fecha,
+            },
+          },
+        });
+
+        if (existing) {
+          const nuevaProduccion = existing.produccion + mov.cantidad;
+          const nuevoSaldo = existing.saldoInicial + nuevaProduccion - existing.ventas - existing.perdidas - existing.consumo;
+          await tx.inventarioHuevo.update({
+            where: { id: existing.id },
+            data: {
+              produccion: nuevaProduccion,
+              saldoFinal: nuevoSaldo,
+            },
+          });
+        } else {
+          const prev = await tx.inventarioHuevo.findFirst({
+            where: {
+              tipoHuevoId: mov.tipoHuevoId,
+              fecha: { lt: mov.fecha },
+            },
+            orderBy: { fecha: 'desc' },
+          });
+          const saldoInicial = prev ? prev.saldoFinal : 0;
+          await tx.inventarioHuevo.create({
+            data: {
+              tipoHuevoId: mov.tipoHuevoId,
+              fecha: mov.fecha,
+              saldoInicial,
+              produccion: mov.cantidad,
+              saldoFinal: saldoInicial + mov.cantidad,
+            },
+          });
+        }
+
+        await tx.movimientoHuevo.create({
+          data: {
+            fecha: mov.fecha,
+            tipoMovimiento: 'PRODUCCION',
+            tipoHuevoId: mov.tipoHuevoId,
+            cantidad: mov.cantidad,
+            destino: mov.galpon,
+            referencia: `Excel:${reporteId}`,
+            usuarioId,
+            observacion: 'Importación Excel clasificación',
+          },
+        });
+      }
+    });
 
     return count;
   }

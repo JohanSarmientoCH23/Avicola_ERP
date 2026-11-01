@@ -1,4 +1,4 @@
-import { Controller, Get, Post, UploadedFile, UseGuards, UseInterceptors, Body, Query, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, UploadedFile, UseGuards, UseInterceptors, Body, Query, Param, BadRequestException } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiQuery } from '@nestjs/swagger';
 import { diskStorage } from 'multer';
@@ -113,7 +113,7 @@ export class ExcelController {
 
   @Get('reportes/:id')
   @ApiOperation({ summary: 'Obtener detalle de un reporte Excel' })
-  async getReporte(@Query('id') id: string) {
+  async getReporte(@Param('id') id: string) {
     return this.prisma.reporteExcel.findUnique({
       where: { id },
       include: {

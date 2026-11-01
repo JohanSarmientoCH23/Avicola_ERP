@@ -7,6 +7,7 @@ export class ReconciliationService {
 
   async generate(fecha: string, usuarioId: string) {
     const fechaDate = new Date(fecha);
+    fechaDate.setHours(0, 0, 0, 0);
 
     const existing = await this.prisma.conciliacion.findUnique({
       where: { fecha: fechaDate },
@@ -21,45 +22,101 @@ export class ReconciliationService {
       },
     });
 
-    const conciliacion = await this.prisma.conciliacion.create({
-      data: {
-        fecha: fechaDate,
-        estado: 'PENDIENTE',
-      },
-    });
+    const conciliacion = await this.prisma.$transaction(async tx => {
+      const conc = await tx.conciliacion.create({
+        data: {
+          fecha: fechaDate,
+          estado: 'PENDIENTE',
+        },
+      });
 
-    for (const comp of comparaciones) {
-      for (const detalle of comp.detallesGalpon) {
-        let estado = 'CORRECTO';
-        const diff = Math.abs(Number(detalle.diferencia) || 0);
-        if (diff > 100) estado = 'ERROR';
-        else if (diff > 0) estado = 'REVISAR';
+      for (const comp of comparaciones) {
+        for (const detalle of comp.detallesGalpon) {
+          let estado = 'CORRECTO';
+          const diff = Math.abs(Number(detalle.diferencia) || 0);
+          if (diff > 100) estado = 'ERROR';
+          else if (diff > 0) estado = 'REVISAR';
 
-        const conceptoNombre = `Galpón ${detalle.galpon?.codigo || ''} - ${detalle.campo}`;
+          const conceptoNombre = `Galpón ${detalle.galpon?.codigo || ''} - ${detalle.campo}`;
 
-        let concepto = await this.prisma.conceptoConciliacion.findUnique({
-          where: { nombre: conceptoNombre },
-        });
-        if (!concepto) {
-          concepto = await this.prisma.conceptoConciliacion.create({
-            data: { nombre: conceptoNombre, modulo: 'CONCILIACION' },
+          let concepto = await tx.conceptoConciliacion.findUnique({
+            where: { nombre: conceptoNombre },
+          });
+          if (!concepto) {
+            concepto = await tx.conceptoConciliacion.create({
+              data: { nombre: conceptoNombre, modulo: 'CONCILIACION' },
+            });
+          }
+
+          let valorSistema = Number(detalle.valorOcr) || 0;
+          if (detalle.campo === 'produccion') {
+            const galponId = detalle.galponId;
+            const inv = await tx.inventarioAlimento.findFirst({
+              where: { galponId, fecha: fechaDate },
+            });
+            if (inv) valorSistema = Number(inv.consumoKg) || 0;
+          }
+
+          await tx.detalleConciliacion.create({
+            data: {
+              conciliacionId: conc.id,
+              comparacionId: comp.id,
+              conceptoId: concepto.id,
+              valorImagen: Number(detalle.valorOcr) || 0,
+              valorExcel: Number(detalle.valorExcel) || 0,
+              valorSistema,
+              diferencia: Number(detalle.diferencia) || 0,
+              estado,
+            },
           });
         }
 
-        await this.prisma.detalleConciliacion.create({
-          data: {
-            conciliacionId: conciliacion.id,
-            comparacionId: comp.id,
-            conceptoId: concepto.id,
-            valorImagen: Number(detalle.valorOcr) || 0,
-            valorExcel: Number(detalle.valorExcel) || 0,
-            valorSistema: Number(detalle.valorOcr) || 0,
-            diferencia: Number(detalle.diferencia) || 0,
-            estado,
-          },
-        });
+        for (const detalle of comp.detalles) {
+          let estado = 'CORRECTO';
+          const diff = Math.abs(Number(detalle.diferencia) || 0);
+          if (diff > 50) estado = 'ERROR';
+          else if (diff > 0) estado = 'REVISAR';
+
+          const conceptoNombre = detalle.campo;
+
+          let concepto = await tx.conceptoConciliacion.findUnique({
+            where: { nombre: conceptoNombre },
+          });
+          if (!concepto) {
+            concepto = await tx.conceptoConciliacion.create({
+              data: { nombre: conceptoNombre, modulo: 'CONCILIACION' },
+            });
+          }
+
+          let valorSistema = Number(detalle.valorOcr) || 0;
+          if (detalle.campo.startsWith('Huevo ')) {
+            const codigoHuevo = detalle.campo.replace('Huevo ', '').trim();
+            const inv = await tx.inventarioHuevo.findFirst({
+              where: {
+                fecha: fechaDate,
+                tipoHuevo: { codigo: codigoHuevo as any },
+              },
+            });
+            if (inv) valorSistema = inv.saldoFinal;
+          }
+
+          await tx.detalleConciliacion.create({
+            data: {
+              conciliacionId: conc.id,
+              comparacionId: comp.id,
+              conceptoId: concepto.id,
+              valorImagen: Number(detalle.valorOcr) || 0,
+              valorExcel: Number(detalle.valorExcel) || 0,
+              valorSistema,
+              diferencia: Number(detalle.diferencia) || 0,
+              estado,
+            },
+          });
+        }
       }
-    }
+
+      return conc;
+    });
 
     return this.findOne(conciliacion.id);
   }

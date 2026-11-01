@@ -8,6 +8,8 @@ import { GalponAccess } from '../../../common/decorators/galpon-access.decorator
 import { CreateGalponUseCase, GetGalponesUseCase, GetGalponUseCase, UpdateGalponUseCase, DeleteGalponUseCase } from '../../../domain/use-cases/galpones';
 import { CreateGalponDto } from '../../../modules/galpones/dto/create-galpon.dto';
 import { UpdateGalponDto } from '../../../modules/galpones/dto/update-galpon.dto';
+import { CurrentUser } from '../../../common/decorators/current-user.decorator';
+import { PrismaService } from '../../../database/prisma.service';
 import { Rol } from '@prisma/client';
 
 @ApiTags('Galpones')
@@ -21,6 +23,7 @@ export class GalponesHexaController {
     private readonly getGalponUseCase: GetGalponUseCase,
     private readonly updateGalponUseCase: UpdateGalponUseCase,
     private readonly deleteGalponUseCase: DeleteGalponUseCase,
+    private readonly prisma: PrismaService,
   ) {}
 
   @Post()
@@ -32,8 +35,16 @@ export class GalponesHexaController {
 
   @Get()
   @ApiOperation({ summary: 'Listar galpones' })
-  findAll() {
-    return this.getGalponesUseCase.execute();
+  async findAll(@CurrentUser() user?: any) {
+    let where: any;
+    if (user?.rol === Rol.GALPONERO && user?.id) {
+      const asignaciones = await this.prisma.usuarioGalpon.findMany({
+        where: { usuarioId: user.id },
+        select: { galponId: true },
+      });
+      where = { id: { in: asignaciones.map(a => a.galponId) } };
+    }
+    return this.getGalponesUseCase.execute({ where });
   }
 
   @Get(':id')

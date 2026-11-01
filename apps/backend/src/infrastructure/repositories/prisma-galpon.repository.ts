@@ -20,8 +20,9 @@ export class PrismaGalponRepository implements IGalponRepository {
     return data ? this.toDomain(data) : null;
   }
 
-  async findAll(params?: { include?: any; orderBy?: any }): Promise<Galpon[]> {
+  async findAll(params?: { where?: any; include?: any; orderBy?: any }): Promise<Galpon[]> {
     const data = await this.prisma.galpon.findMany({
+      where: params?.where,
       include: params?.include,
       orderBy: params?.orderBy || { codigo: 'asc' },
     });

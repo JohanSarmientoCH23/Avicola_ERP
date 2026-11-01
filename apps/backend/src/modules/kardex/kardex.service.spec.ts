@@ -8,32 +8,60 @@ describe('KardexService', () => {
   let service: KardexService;
   let prisma: any;
   let auditService: any;
+  let tx: any;
 
-  const mockMovimiento = {
-    id: 'uuid-1',
+  const mockMovimientoHuevo = {
+    id: 'mov-1',
     fecha: new Date('2026-03-15'),
     tipoMovimiento: 'ENTRADA',
-    tipoProducto: 'HUEVO',
     cantidad: 100,
-    productoRef: 'JUMBO',
-    galponId: 'galpon-1',
     tipoHuevoId: 'tipo-1',
     origen: 'PRODUCCION',
+    destino: null,
     usuarioId: 'user-1',
     createdAt: new Date(),
-    galpon: { codigo: '1A' },
     tipoHuevo: { codigo: 'JUMBO', nombre: 'Jumbo' },
     usuario: { nombre: 'Test', apellido: 'User' },
   };
 
   beforeEach(async () => {
-    prisma = {
-      movimientoInventario: {
-        create: jest.fn().mockResolvedValue(mockMovimiento),
-        findMany: jest.fn().mockResolvedValue([mockMovimiento]),
-        count: jest.fn().mockResolvedValue(1),
+    tx = {
+      movimientoHuevo: {
+        create: jest.fn().mockResolvedValue(mockMovimientoHuevo),
+        findMany: jest.fn().mockResolvedValue([]),
       },
-      saldoInventario: {
+      movimientoGallina: {
+        create: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      movimientoAlimento: {
+        create: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      movimientoBandeja: {
+        create: jest.fn(),
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      inventarioHuevo: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({}),
+        update: jest.fn().mockResolvedValue({}),
+      },
+      inventarioGallina: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({}),
+        update: jest.fn().mockResolvedValue({}),
+      },
+      inventarioAlimento: {
+        findUnique: jest.fn().mockResolvedValue(null),
+        findFirst: jest.fn().mockResolvedValue(null),
+        create: jest.fn().mockResolvedValue({}),
+        update: jest.fn().mockResolvedValue({}),
+      },
+      inventarioBandeja: {
+        findUnique: jest.fn().mockResolvedValue(null),
         findFirst: jest.fn().mockResolvedValue(null),
         create: jest.fn().mockResolvedValue({}),
         update: jest.fn().mockResolvedValue({}),
@@ -45,6 +73,27 @@ describe('KardexService', () => {
       tipoHuevo: {
         findUnique: jest.fn().mockResolvedValue({ id: 'tipo-1', codigo: 'JUMBO' }),
       },
+      auditoria: {
+        create: jest.fn().mockResolvedValue({}),
+      },
+    };
+
+    prisma = {
+      $transaction: jest.fn(async (fn: any) => fn(tx)),
+      movimientoHuevo: {
+        findMany: jest.fn().mockResolvedValue([mockMovimientoHuevo]),
+      },
+      movimientoGallina: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      movimientoAlimento: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      movimientoBandeja: {
+        findMany: jest.fn().mockResolvedValue([]),
+      },
+      galpon: tx.galpon,
+      tipoHuevo: tx.tipoHuevo,
     };
 
     auditService = { log: jest.fn() };
@@ -65,39 +114,42 @@ describe('KardexService', () => {
   });
 
   describe('createMovimiento', () => {
-    it('should create an entry movement', async () => {
+    it('should create an entry movement and update snapshot atomically', async () => {
       const dto = {
         fecha: '2026-03-15',
         tipoMovimiento: 'ENTRADA',
         tipoProducto: 'HUEVO',
         cantidad: 100,
-        productoRef: 'JUMBO',
-        galponId: 'galpon-1',
         tipoHuevoId: 'tipo-1',
-        origen: 'PRODUCCION',
-        destino: undefined,
-        referencia: undefined,
-        observacion: undefined,
       };
 
       const result = await service.createMovimiento(dto as any, 'user-1');
-      expect(result).toEqual(mockMovimiento);
-      expect(prisma.movimientoInventario.create).toHaveBeenCalled();
+      expect(result).toEqual(mockMovimientoHuevo);
+      expect(tx.movimientoHuevo.create).toHaveBeenCalled();
+      expect(tx.inventarioHuevo.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            tipoHuevoId: 'tipo-1',
+            saldoInicial: 0,
+            produccion: 100,
+            saldoFinal: 100,
+          }),
+        }),
+      );
       expect(auditService.log).toHaveBeenCalled();
+      expect(prisma.$transaction).toHaveBeenCalled();
     });
 
-    it('should reject negative quantities', async () => {
+    it('should reject zero and negative quantities', async () => {
       const dto = {
         fecha: '2026-03-15',
         tipoMovimiento: 'ENTRADA',
         tipoProducto: 'HUEVO',
-        cantidad: -5,
-        galponId: 'galpon-1',
+        cantidad: 0,
+        tipoHuevoId: 'tipo-1',
       };
 
-      await expect(
-        service.createMovimiento(dto as any, 'user-1'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.createMovimiento(dto as any, 'user-1')).rejects.toThrow(BadRequestException);
     });
 
     it('should reject egg movement without tipoHuevoId', async () => {
@@ -106,13 +158,20 @@ describe('KardexService', () => {
         tipoMovimiento: 'ENTRADA',
         tipoProducto: 'HUEVO',
         cantidad: 100,
-        galponId: undefined,
-        tipoHuevoId: undefined,
       };
 
-      await expect(
-        service.createMovimiento(dto as any, 'user-1'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.createMovimiento(dto as any, 'user-1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject gallina movement without galponId', async () => {
+      const dto = {
+        fecha: '2026-03-15',
+        tipoMovimiento: 'ENTRADA',
+        tipoProducto: 'GALLINA',
+        cantidad: 10,
+      };
+
+      await expect(service.createMovimiento(dto as any, 'user-1')).rejects.toThrow(BadRequestException);
     });
 
     it('should reject venta without destino', async () => {
@@ -122,49 +181,111 @@ describe('KardexService', () => {
         tipoProducto: 'HUEVO',
         cantidad: 100,
         tipoHuevoId: 'tipo-1',
-        galponId: undefined,
-        destino: undefined,
       };
 
-      await expect(
-        service.createMovimiento(dto as any, 'user-1'),
-      ).rejects.toThrow(BadRequestException);
+      await expect(service.createMovimiento(dto as any, 'user-1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should reject salida that exceeds stock', async () => {
+      tx.inventarioHuevo.findFirst.mockResolvedValue({ saldoFinal: 50 });
+      const dto = {
+        fecha: '2026-03-15',
+        tipoMovimiento: 'VENTA',
+        tipoProducto: 'HUEVO',
+        cantidad: 100,
+        tipoHuevoId: 'tipo-1',
+        destino: 'Cliente X',
+      };
+
+      await expect(service.createMovimiento(dto as any, 'user-1')).rejects.toThrow(BadRequestException);
+    });
+
+    it('should create dual movements for gallina TRASLADO', async () => {
+      tx.galpon.findUnique.mockImplementation(({ where }: any) => {
+        if (where.codigo === '1A') return Promise.resolve({ id: 'galpon-origen', codigo: '1A', gallinasActuales: 100 });
+        if (where.id === 'galpon-origen') return Promise.resolve({ id: 'galpon-origen', codigo: '1A', gallinasActuales: 100 });
+        if (where.id === 'galpon-destino') return Promise.resolve({ id: 'galpon-destino', codigo: '2B', gallinasActuales: 0 });
+        return Promise.resolve(null);
+      });
+      tx.movimientoGallina.create
+        .mockResolvedValueOnce({ id: 'mov-salida' })
+        .mockResolvedValueOnce({
+          id: 'mov-entrada',
+          galpon: { codigo: '2B' },
+          usuario: { nombre: 'T', apellido: 'U' },
+        });
+
+      const dto = {
+        fecha: '2026-03-15',
+        tipoMovimiento: 'TRASLADO',
+        tipoProducto: 'GALLINA',
+        cantidad: 30,
+        galponId: 'galpon-destino',
+        origen: '1A',
+      };
+
+      const result = await service.createMovimiento(dto as any, 'user-1');
+      expect(result.id).toBe('mov-entrada');
+      expect(tx.movimientoGallina.create).toHaveBeenCalledTimes(2);
+      expect(tx.galpon.update).toHaveBeenCalledTimes(2);
+    });
+
+    it('should reject TRASLADO exceeding origin stock', async () => {
+      tx.galpon.findUnique.mockImplementation(({ where }: any) => {
+        if (where.codigo === '1A') return Promise.resolve({ id: 'galpon-origen', codigo: '1A', gallinasActuales: 10 });
+        if (where.id === 'galpon-destino') return Promise.resolve({ id: 'galpon-destino', codigo: '2B', gallinasActuales: 0 });
+        return Promise.resolve(null);
+      });
+
+      const dto = {
+        fecha: '2026-03-15',
+        tipoMovimiento: 'TRASLADO',
+        tipoProducto: 'GALLINA',
+        cantidad: 50,
+        galponId: 'galpon-destino',
+        origen: '1A',
+      };
+
+      await expect(service.createMovimiento(dto as any, 'user-1')).rejects.toThrow(BadRequestException);
     });
   });
 
   describe('getKardex', () => {
-    it('should return paginated movements', async () => {
+    it('should return paginated movements with full-history saldo', async () => {
       const result = await service.getKardex('HUEVO', {});
       expect(result.data.length).toBe(1);
       expect(result.data[0].saldoCalculado).toBeDefined();
       expect(result.total).toBe(1);
       expect(result.page).toBe(1);
-    });
-
-    it('should calculate saldo for entries', async () => {
-      const entryMov = { ...mockMovimiento, tipoMovimiento: 'ENTRADA', cantidad: 100 };
-      prisma.movimientoInventario.findMany.mockResolvedValue([entryMov]);
-      prisma.movimientoInventario.count.mockResolvedValue(1);
-
-      const result = await service.getKardex('HUEVO', {});
       expect(result.saldoActual).toBe(100);
     });
 
-    it('should calculate saldo for exits', async () => {
-      const exitMov = { ...mockMovimiento, tipoMovimiento: 'SALIDA', cantidad: 30 };
-      prisma.movimientoInventario.findMany.mockResolvedValue([exitMov]);
-      prisma.movimientoInventario.count.mockResolvedValue(1);
+    it('should compute saldo across the full history, not just the page', async () => {
+      prisma.movimientoHuevo.findMany.mockResolvedValue([
+        { ...mockMovimientoHuevo, id: 'm1', tipoMovimiento: 'ENTRADA', cantidad: 100 },
+        { ...mockMovimientoHuevo, id: 'm2', tipoMovimiento: 'ENTRADA', cantidad: 50 },
+        { ...mockMovimientoHuevo, id: 'm3', tipoMovimiento: 'VENTA', cantidad: 30 },
+      ]);
 
-      const result = await service.getKardex('HUEVO', {});
-      expect(result.saldoActual).toBe(-30);
+      const result = await service.getKardex('HUEVO', { page: 2, limit: 2 });
+      expect(result.saldoActual).toBe(120);
+      expect(result.total).toBe(3);
+      expect(result.totalPages).toBe(2);
+    });
+
+    it('should clamp invalid page/limit instead of dividing by zero', async () => {
+      const result = await service.getKardex('HUEVO', { page: 0 as any, limit: 0 as any });
+      expect(result.page).toBe(1);
+      expect(result.limit).toBe(50);
+      expect(Number.isFinite(result.totalPages)).toBe(true);
     });
   });
 
   describe('getResumen', () => {
     it('should return monthly summary', async () => {
-      prisma.movimientoInventario.findMany.mockResolvedValue([
-        { ...mockMovimiento, tipoMovimiento: 'ENTRADA', cantidad: 200 },
-        { ...mockMovimiento, tipoMovimiento: 'SALIDA', cantidad: 50 },
+      prisma.movimientoHuevo.findMany.mockResolvedValue([
+        { ...mockMovimientoHuevo, tipoMovimiento: 'ENTRADA', cantidad: 200 },
+        { ...mockMovimientoHuevo, tipoMovimiento: 'SALIDA', cantidad: 50 },
       ]);
 
       const result = await service.getResumen('HUEVO');

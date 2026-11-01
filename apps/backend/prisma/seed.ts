@@ -1,4 +1,4 @@
-import { PrismaClient, Rol, TipoHuevoCodigo, EstadoGalpon, TipoCosto, TipoBandeja } from '@prisma/client';
+import { Prisma, PrismaClient, Rol, TipoHuevoCodigo, EstadoGalpon, TipoCosto, TipoBandeja } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
@@ -23,7 +23,7 @@ async function main() {
     { email: 'almacenista@avicola.com', nombre: 'Luis', apellido: 'Hernández', rol: Rol.ALMACENISTA },
   ];
 
-  const createdUsers = [];
+  const createdUsers: Awaited<ReturnType<typeof prisma.usuario.upsert>>[] = [];
   for (const u of users) {
     const user = await prisma.usuario.upsert({
       where: { email: u.email },
@@ -32,75 +32,6 @@ async function main() {
     });
     createdUsers.push(user);
   }
-  console.log('Usuarios creados');
-
-  // ============================================================
-  // PERMISOS Y ROLES
-  // ============================================================
-  const permisos = [
-    { codigo: 'DASHBOARD_VER', descripcion: 'Ver dashboard', modulo: 'DASHBOARD' },
-    { codigo: 'GALPONES_VER', descripcion: 'Ver galpones', modulo: 'GALPONES' },
-    { codigo: 'GALPONES_CREAR', descripcion: 'Crear galpones', modulo: 'GALPONES' },
-    { codigo: 'GALPONES_EDITAR', descripcion: 'Editar galpones', modulo: 'GALPONES' },
-    { codigo: 'REPORTES_VER', descripcion: 'Ver reportes', modulo: 'REPORTES' },
-    { codigo: 'REPORTES_CREAR', descripcion: 'Crear reportes diarios', modulo: 'REPORTES' },
-    { codigo: 'PRODUCCION_VER', descripcion: 'Ver producción', modulo: 'PRODUCCION' },
-    { codigo: 'PRODUCCION_CREAR', descripcion: 'Crear reportes de producción', modulo: 'PRODUCCION' },
-    { codigo: 'OCR_CREAR', descripcion: 'Procesar OCR', modulo: 'OCR' },
-    { codigo: 'EXCEL_VER', descripcion: 'Ver importaciones Excel', modulo: 'EXCEL' },
-    { codigo: 'EXCEL_CREAR', descripcion: 'Importar Excel', modulo: 'EXCEL' },
-    { codigo: 'COMPARACION_VER', descripcion: 'Ver comparaciones', modulo: 'COMPARACION' },
-    { codigo: 'COMPARACION_CREAR', descripcion: 'Crear comparaciones', modulo: 'COMPARACION' },
-    { codigo: 'INVENTARIO_VER', descripcion: 'Ver inventarios', modulo: 'INVENTARIO' },
-    { codigo: 'INVENTARIO_CREAR', descripcion: 'Crear movimientos de inventario', modulo: 'INVENTARIO' },
-    { codigo: 'CONCILIACION_VER', descripcion: 'Ver conciliaciones', modulo: 'CONCILIACION' },
-    { codigo: 'CONCILIACION_CREAR', descripcion: 'Crear conciliaciones', modulo: 'CONCILIACION' },
-    { codigo: 'CONCILIACION_APROBAR', descripcion: 'Aprobar conciliaciones', modulo: 'CONCILIACION' },
-    { codigo: 'COSTOS_VER', descripcion: 'Ver costos', modulo: 'COSTOS' },
-    { codigo: 'COSTOS_CREAR', descripcion: 'Crear costos', modulo: 'COSTOS' },
-    { codigo: 'COSTOS_APROBAR', descripcion: 'Aprobar costos', modulo: 'COSTOS' },
-    { codigo: 'DESPACHOS_VER', descripcion: 'Ver despachos', modulo: 'DESPACHOS' },
-    { codigo: 'DESPACHOS_CREAR', descripcion: 'Crear despachos', modulo: 'DESPACHOS' },
-    { codigo: 'DESPACHOS_APROBAR', descripcion: 'Aprobar despachos', modulo: 'DESPACHOS' },
-    { codigo: 'USUARIOS_VER', descripcion: 'Ver usuarios', modulo: 'USUARIOS' },
-    { codigo: 'USUARIOS_CREAR', descripcion: 'Crear usuarios', modulo: 'USUARIOS' },
-    { codigo: 'USUARIOS_EDITAR', descripcion: 'Editar usuarios', modulo: 'USUARIOS' },
-    { codigo: 'AUDITORIA_VER', descripcion: 'Ver auditoría', modulo: 'AUDITORIA' },
-    { codigo: 'KARDEX_VER', descripcion: 'Ver kardex', modulo: 'KARDEX' },
-    { codigo: 'KARDEX_CREAR', descripcion: 'Crear movimientos kardex', modulo: 'KARDEX' },
-  ];
-
-  for (const p of permisos) {
-    await prisma.permiso.upsert({
-      where: { codigo: p.codigo },
-      update: { descripcion: p.descripcion, modulo: p.modulo },
-      create: p,
-    });
-  }
-
-  // Asignar permisos por rol
-  const rolPermisosMap: Record<Rol, string[]> = {
-    [Rol.ADMINISTRADOR]: permisos.map((p) => p.codigo),
-    [Rol.CONTADOR]: ['DASHBOARD_VER', 'REPORTES_VER', 'EXCEL_VER', 'EXCEL_CREAR', 'COMPARACION_VER', 'COMPARACION_CREAR', 'CONCILIACION_VER', 'CONCILIACION_CREAR', 'CONCILIACION_APROBAR', 'COSTOS_VER', 'COSTOS_CREAR', 'COSTOS_APROBAR', 'DESPACHOS_VER', 'DESPACHOS_APROBAR', 'INVENTARIO_VER', 'AUDITORIA_VER'],
-    [Rol.RESPONSABLE_PRODUCCION]: ['DASHBOARD_VER', 'GALPONES_VER', 'GALPONES_CREAR', 'GALPONES_EDITAR', 'REPORTES_VER', 'REPORTES_CREAR', 'PRODUCCION_VER', 'PRODUCCION_CREAR', 'OCR_CREAR', 'EXCEL_VER', 'COMPARACION_VER', 'INVENTARIO_VER', 'INVENTARIO_CREAR', 'KARDEX_VER', 'KARDEX_CREAR'],
-    [Rol.GALPONERO]: ['DASHBOARD_VER', 'GALPONES_VER', 'REPORTES_CREAR', 'PRODUCCION_CREAR', 'INVENTARIO_VER'],
-    [Rol.AUDITOR]: ['DASHBOARD_VER', 'REPORTES_VER', 'COMPARACION_VER', 'CONCILIACION_VER', 'AUDITORIA_VER', 'KARDEX_VER'],
-    [Rol.ALMACENISTA]: ['DASHBOARD_VER', 'INVENTARIO_VER', 'INVENTARIO_CREAR', 'DESPACHOS_VER', 'DESPACHOS_CREAR', 'KARDEX_VER', 'KARDEX_CREAR'],
-  };
-
-  for (const [rol, permisoCodigos] of Object.entries(rolPermisosMap)) {
-    for (const codigo of permisoCodigos) {
-      const permiso = await prisma.permiso.findUnique({ where: { codigo } });
-      if (permiso) {
-        await prisma.rolPermiso.upsert({
-          where: { rol_permisoId: { rol: rol as Rol, permisoId: permiso.id } },
-          update: {},
-          create: { rol: rol as Rol, permisoId: permiso.id },
-        });
-      }
-    }
-  }
-  console.log('Permisos y roles configurados');
   console.log('Usuarios creados');
 
   // ============================================================
@@ -181,12 +112,13 @@ async function main() {
     { codigo: TipoHuevoCodigo.A, nombre: 'A', pesoMin: 50, pesoMax: 57, orden: 4 },
     { codigo: TipoHuevoCodigo.B, nombre: 'B', pesoMin: 43, pesoMax: 50, orden: 5 },
     { codigo: TipoHuevoCodigo.REVOLTURA, nombre: 'Revoltura', pesoMin: 0, pesoMax: 43, orden: 6 },
-    { codigo: TipoHuevoCodigo.C, nombre: 'C', pesoMin: 0, pesoMax: 0, orden: 7 },
-    { codigo: TipoHuevoCodigo.PIPO, nombre: 'Pipo', pesoMin: 0, pesoMax: 0, orden: 8 },
-    { codigo: TipoHuevoCodigo.BLANCO, nombre: 'Blanco', pesoMin: 0, pesoMax: 0, orden: 9 },
-    { codigo: TipoHuevoCodigo.SUCIO, nombre: 'Sucio', pesoMin: 0, pesoMax: 0, orden: 10 },
-    { codigo: TipoHuevoCodigo.ROTO, nombre: 'Roto', pesoMin: 0, pesoMax: 0, orden: 11 },
-    { codigo: TipoHuevoCodigo.YEMAS, nombre: 'Yemas', pesoMin: 0, pesoMax: 0, orden: 12 },
+    { codigo: TipoHuevoCodigo.REVOLTURA_BANDEJEADA, nombre: 'Rev. Bandejeada', pesoMin: 0, pesoMax: 0, orden: 7 },
+    { codigo: TipoHuevoCodigo.C, nombre: 'C', pesoMin: 0, pesoMax: 0, orden: 8 },
+    { codigo: TipoHuevoCodigo.PIPO, nombre: 'Pipo', pesoMin: 0, pesoMax: 0, orden: 9 },
+    { codigo: TipoHuevoCodigo.BLANCO, nombre: 'Blanco', pesoMin: 0, pesoMax: 0, orden: 10 },
+    { codigo: TipoHuevoCodigo.SUCIO, nombre: 'Sucio', pesoMin: 0, pesoMax: 0, orden: 11 },
+    { codigo: TipoHuevoCodigo.ROTO, nombre: 'Roto', pesoMin: 0, pesoMax: 0, orden: 12 },
+    { codigo: TipoHuevoCodigo.YEMAS, nombre: 'Yemas', pesoMin: 0, pesoMax: 0, orden: 13 },
   ];
 
   for (const tipo of tiposHuevo) {
@@ -209,7 +141,7 @@ async function main() {
     { razonSocial: 'Restaurantes El Corral S.A.', ruc: '5678901234-5', direccion: 'Centro Comercial Andino, Bogotá', telefono: '+57 1 345 6789', email: 'supply@elcorral.com' },
   ];
 
-  const createdClientes = [];
+  const createdClientes: Awaited<ReturnType<typeof prisma.cliente.upsert>>[] = [];
   for (const c of clientes) {
     const cliente = await prisma.cliente.upsert({
       where: { ruc: c.ruc! },
@@ -232,7 +164,7 @@ async function main() {
     { nombre: 'Administrativo', descripcion: 'Gastos de oficina, seguros', tipo: TipoCosto.INDIRECTO },
   ];
 
-  const createdCategorias = [];
+  const createdCategorias: Awaited<ReturnType<typeof prisma.categoriaCosto.upsert>>[] = [];
   for (const cat of categoriasCosto) {
     const categoria = await prisma.categoriaCosto.upsert({
       where: { nombre: cat.nombre },
@@ -318,55 +250,6 @@ async function main() {
     });
   }
   console.log('Conceptos de conciliación creados');
-  console.log('Categorías y conceptos de costo creados');
-
-  // ============================================================
-  // CONCEPTOS DE GASTO FIJO
-  // ============================================================
-  const conceptosGasto = [
-    { nombre: 'Arriendo Terreno', descripcion: 'Arriendo mensual predio', categoria: 'ARRIENDO' },
-    { nombre: 'Seguro Vehículos', descripcion: 'Seguro flota camiones', categoria: 'SEGUROS' },
-    { nombre: 'Servicios Contables', descripcion: 'Honorarios contador externo', categoria: 'PROFESIONALES' },
-    { nombre: 'Mantenimiento Equipos', descripcion: 'Contrato mantenimiento preventivo', categoria: 'MANTENIMIENTO' },
-    { nombre: 'Capacitación Personal', descripcion: 'Cursos y certificaciones', categoria: 'CAPACITACION' },
-  ];
-
-  for (const cg of conceptosGasto) {
-    await prisma.conceptoGasto.upsert({
-      where: { nombre: cg.nombre },
-      update: { descripcion: cg.descripcion, categoria: cg.categoria },
-      create: cg,
-    });
-  }
-  console.log('Conceptos de gasto fijo creados');
-
-  // ============================================================
-  // CONCEPTOS DE CONCILIACIÓN
-  // ============================================================
-  const conceptosConciliacion = [
-    { nombre: 'Producción Total', descripcion: 'Total huevos producidos', modulo: 'CONCILIACION' },
-    { nombre: 'Mortalidad', descripcion: 'Aves muertas en el día', modulo: 'CONCILIACION' },
-    { nombre: 'Alimento Entrada', descripcion: 'Kg alimento ingresado', modulo: 'CONCILIACION' },
-    { nombre: 'Alimento Consumo', descripcion: 'Kg alimento consumido', modulo: 'CONCILIACION' },
-    { nombre: 'Gallinas Vivas', descripcion: 'Inventario aves vivas', modulo: 'CONCILIACION' },
-    { nombre: 'Clasificación JUMBO', descripcion: 'Huevos tipo Jumbo', modulo: 'CONCILIACION' },
-    { nombre: 'Clasificación EXTRA', descripcion: 'Huevos tipo Extra', modulo: 'CONCILIACION' },
-    { nombre: 'Clasificación AA', descripcion: 'Huevos tipo AA', modulo: 'CONCILIACION' },
-    { nombre: 'Clasificación A', descripcion: 'Huevos tipo A', modulo: 'CONCILIACION' },
-    { nombre: 'Clasificación B', descripcion: 'Huevos tipo B', modulo: 'CONCILIACION' },
-    { nombre: 'Bandejas AA', descripcion: 'Inventario bandejas AA', modulo: 'CONCILIACION' },
-    { nombre: 'Bandejas A', descripcion: 'Inventario bandejas A', modulo: 'CONCILIACION' },
-    { nombre: 'Bandejas B', descripcion: 'Inventario bandejas B', modulo: 'CONCILIACION' },
-  ];
-
-  for (const cc of conceptosConciliacion) {
-    await prisma.conceptoConciliacion.upsert({
-      where: { nombre: cc.nombre },
-      update: { descripcion: cc.descripcion, modulo: cc.modulo },
-      create: cc,
-    });
-  }
-  console.log('Conceptos de conciliación creados');
 
   // ============================================================
   // SILOS
@@ -390,21 +273,20 @@ async function main() {
   // ============================================================
   // LOTE Y GALPONES
   // ============================================================
-  const lote = await prisma.lote.upsert({
-    where: { nombre: 'Lote 01 - 2026' },
-    update: {},
-    create: {
-      nombre: 'Lote 01 - 2026',
-      descripcion: 'Lote principal granja Llano Grande',
-      fechaInicio: new Date('2026-01-15'),
-      estado: 'ACTIVO',
-    },
-  });
+  const loteData = {
+    nombre: 'Lote 01 - 2026',
+    descripcion: 'Lote principal granja Llano Grande',
+    fechaInicio: new Date('2026-01-15'),
+    estado: 'ACTIVO',
+  };
+  const lote =
+    (await prisma.lote.findFirst({ where: { nombre: loteData.nombre } })) ??
+    (await prisma.lote.create({ data: loteData }));
 
   const galponCodes = ['1A', '1B', '2A', '2B', '3A', '3B', '4A', '4B', '5A', '5B', '6A', '6B'];
   const gallinasIniciales = [25000, 24500, 25000, 24800, 25000, 24500, 25000, 24800, 25000, 24500, 25000, 24800];
 
-  const createdGalpones = [];
+  const createdGalpones: Awaited<ReturnType<typeof prisma.galpon.upsert>>[] = [];
   for (let i = 0; i < galponCodes.length; i++) {
     const galpon = await prisma.galpon.upsert({
       where: { codigo: galponCodes[i] },
@@ -530,6 +412,82 @@ async function main() {
   }
   console.log('Inventarios iniciales creados');
 
+  // ============================================================
+  // REPORTES DIARIOS (180 días) + DETALLES DE GALPÓN + PRODUCCIÓN
+  // ============================================================
+  const REPORT_DAYS = 180;
+  const dayKeyOf = (d: Date) =>
+    `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}-${String(d.getUTCDate()).padStart(2, '0')}`;
+
+  const nowLocal = new Date();
+  const todayUtc = new Date(Date.UTC(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate()));
+  const tiposHuevoActivos = await prisma.tipoHuevo.findMany({
+    where: { activo: true },
+    orderBy: { orden: 'asc' },
+  });
+
+  const reportesRows: { fecha: Date; galponeroId: string }[] = [];
+  for (let day = REPORT_DAYS - 1; day >= 0; day--) {
+    const fecha = new Date(todayUtc.getTime() - day * 86400000);
+    for (const gp of galponeros) {
+      reportesRows.push({ fecha, galponeroId: gp.id });
+    }
+  }
+
+  await prisma.reporteDiario.createMany({
+    data: reportesRows.map((r) => ({ fecha: r.fecha, galponeroId: r.galponeroId, estado: 'VALIDADO', fuente: 'MANUAL' })),
+    skipDuplicates: true,
+  });
+
+  const reportesDb = await prisma.reporteDiario.findMany({
+    where: { fecha: { in: [...new Set(reportesRows.map((r) => r.fecha))] } },
+    select: { id: true, fecha: true, galponeroId: true },
+  });
+  const reporteIdByKey = new Map(reportesDb.map((r) => [`${dayKeyOf(r.fecha)}|${r.galponeroId}`, r.id]));
+
+  const detalleRows: Prisma.DetalleGalponCreateManyInput[] = [];
+  const produccionRows: Prisma.ProduccionHuevoCreateManyInput[] = [];
+  for (const r of reportesRows) {
+    const reporteId = reporteIdByKey.get(`${dayKeyOf(r.fecha)}|${r.galponeroId}`);
+    if (!reporteId) continue;
+
+    const galponeroIdx = galponeros.findIndex((g) => g.id === r.galponeroId);
+    const galponesAsignados = createdGalpones.slice(galponeroIdx * 6, galponeroIdx * 6 + 6);
+
+    for (const g of galponesAsignados) {
+      const mortalidad = Math.floor(Math.random() * 12) + 3;
+      const gallinas = g.gallinasActuales;
+      const produccion = Math.floor(gallinas * (0.74 + Math.random() * 0.14));
+      detalleRows.push({
+        reporteId,
+        galponId: g.id,
+        mortalidad,
+        produccion,
+        gallinas,
+        alimentoConsumo: Math.round(gallinas * 0.115 * 100) / 100,
+        alimentoEntrada: Math.random() > 0.85 ? Math.floor(Math.random() * 500 + 500) : 0,
+      });
+    }
+
+    for (const t of tiposHuevoActivos) {
+      const cantidad = Math.floor(Math.random() * 1500) + 300;
+      const salida = Math.floor(cantidad * (0.75 + Math.random() * 0.15));
+      produccionRows.push({
+        reporteId,
+        tipoHuevoId: t.id,
+        cantidad,
+        salida,
+        saldo: cantidad - salida,
+      });
+    }
+  }
+
+  await prisma.detalleGalpon.createMany({ data: detalleRows, skipDuplicates: true });
+  await prisma.produccionHuevo.createMany({ data: produccionRows, skipDuplicates: true });
+  console.log(
+    `Reportes diarios creados: ${reportesDb.length} reportes, ${detalleRows.length} detalles de galpón, ${produccionRows.length} producciones`,
+  );
+
   console.log('\n✅ Base de datos sembrada exitosamente');
   console.log('\n📋 Credenciales de acceso:');
   console.log(`   Admin:       admin@avicola.com       / ${DEFAULT_SEED_PASSWORD}`);
@@ -540,11 +498,12 @@ async function main() {
   console.log(`   Auditor:     auditor@avicola.com     / ${DEFAULT_SEED_PASSWORD}`);
   console.log(`   Almacenista: almacenista@avicola.com  / ${DEFAULT_SEED_PASSWORD}`);
   console.log('\n🏭 12 Galpones (1A-6B) con ~25,000 gallinas cada uno');
-  console.log('🥚 12 Tipos de huevo configurados (JUMBO a YEMAS)');
+  console.log('🥚 13 Tipos de huevo configurados (JUMBO a YEMAS)');
   console.log('📦 5 Clientes para despachos');
   console.log('💰 6 Categorías de costo con 14 conceptos');
   console.log('🏪 4 Silos de alimento');
   console.log('📊 Inventario de 7 días para testing');
+  console.log('📅 Reportes diarios de 180 días con detalles de galpón y producción');
 }
 
 main()

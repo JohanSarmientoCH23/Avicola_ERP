@@ -32,7 +32,7 @@ export default function AuditPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50 dark:bg-gray-800">
+                <tr className="border-b bg-surface-low dark:bg-gray-800">
                   <th className="p-2 text-left">Fecha/Hora</th>
                   <th className="p-2 text-left">Usuario</th>
                   <th className="p-2 text-left">Acción</th>
@@ -42,14 +42,14 @@ export default function AuditPage() {
               </thead>
               <tbody>
                 {registros.map((r) => (
-                  <tr key={r.id} className="border-b hover:bg-gray-50">
+                  <tr key={r.id} className="border-b hover:bg-surface-low">
                     <td className="p-2">{new Date(r.createdAt).toLocaleString()}</td>
                     <td className="p-2">{r.usuario?.nombre} {r.usuario?.apellido}</td>
                     <td className="p-2">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                         r.accion === 'LOGIN' ? 'bg-blue-100 text-blue-700' :
-                        r.accion === 'LOGOUT' ? 'bg-gray-100 text-gray-700' :
-                        r.accion === 'CREATE' ? 'bg-green-100 text-green-700' :
+                        r.accion === 'LOGOUT' ? 'bg-surface-container text-ink' :
+                        r.accion === 'CREATE' ? 'bg-green-100 text-brand-strong' :
                         r.accion === 'UPDATE' ? 'bg-yellow-100 text-yellow-700' :
                         'bg-red-100 text-red-700'
                       }`}>{r.accion}</span>

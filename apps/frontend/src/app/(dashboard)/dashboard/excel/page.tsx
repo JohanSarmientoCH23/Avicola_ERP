@@ -44,14 +44,14 @@ export default function ExcelPage() {
           <div className="border-2 border-dashed rounded-lg p-8 text-center">
             <input type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="hidden" id="excelInput" />
             <label htmlFor="excelInput" className="cursor-pointer">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="mx-auto h-12 w-12 text-outline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               <p className="mt-2 text-sm text-muted-foreground">Seleccione el archivo Excel</p>
               {file && <p className="mt-2 text-sm font-medium">{file.name}</p>}
             </label>
           </div>
-          <Button onClick={importExcel} disabled={!file || loading} className="w-full bg-green-600 hover:bg-green-700">
+          <Button onClick={importExcel} disabled={!file || loading} className="w-full bg-brand hover:bg-brand-strong">
             {loading ? "Importando..." : "Importar Datos"}
           </Button>
         </CardContent>
@@ -63,17 +63,17 @@ export default function ExcelPage() {
             <CardTitle>Datos Importados</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-              <p className="text-sm font-medium text-green-700">Archivo: {result.reporte?.nombreArchivo}</p>
-              <p className="text-sm text-green-600">Fecha: {result.reporte?.fecha}</p>
-              <p className="text-sm text-green-600">Hojas encontradas: {result.hojas?.join(", ")}</p>
+            <div className="p-3 bg-brand-soft dark:bg-green-900/20 rounded-lg">
+              <p className="text-sm font-medium text-brand-strong">Archivo: {result.reporte?.nombreArchivo}</p>
+              <p className="text-sm text-brand-strong">Fecha: {result.reporte?.fecha}</p>
+              <p className="text-sm text-brand-strong">Hojas encontradas: {result.hojas?.join(", ")}</p>
             </div>
             {result.datosParseados?.galpones?.length > 0 && (
               <div>
                 <h4 className="font-medium mb-2">Galpones detectados:</h4>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border">
-                  <thead className="bg-gray-50 dark:bg-gray-800">
+                  <thead className="bg-surface-low dark:bg-gray-800">
                     <tr><th className="p-2 text-left">Galpón</th><th className="p-2 text-right">Consumo</th><th className="p-2 text-right">Entrada</th><th className="p-2 text-right">Producción</th><th className="p-2 text-right">Mortalidad</th></tr>
                   </thead>
                   <tbody>

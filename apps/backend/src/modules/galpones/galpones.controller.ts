@@ -5,6 +5,7 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { GalponAccessGuard } from '../../common/guards/galpon-access.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { GalponAccess } from '../../common/decorators/galpon-access.decorator';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { GalponesService } from './galpones.service';
 import { CreateGalponDto } from './dto/create-galpon.dto';
 import { UpdateGalponDto } from './dto/update-galpon.dto';
@@ -26,8 +27,8 @@ export class GalponesController {
 
   @Get()
   @ApiOperation({ summary: 'Listar galpones' })
-  findAll() {
-    return this.galponesService.findAll();
+  findAll(@CurrentUser() user?: any) {
+    return this.galponesService.findAll(user?.id, user?.rol);
   }
 
   @Get(':id')

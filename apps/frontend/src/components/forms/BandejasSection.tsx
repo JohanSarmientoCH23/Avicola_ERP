@@ -27,8 +27,8 @@ export function BandejasSection({ data, onUpdate, isMobile = false }: BandejasSe
     return (
       <div className="space-y-3" role="region" aria-label="Inventario de bandejas">
         {data.map((b, i) => (
-          <div key={b.tipo} className="border border-gray-100 rounded-xl p-4 bg-white shadow-sm">
-            <div className="flex items-center justify-between mb-3">
+          <div key={b.tipo} className="border border-gray-100 rounded-xl p-3 bg-white shadow-sm">
+            <div className="flex items-center justify-between mb-2">
               <span className={cn(
                 "px-3 py-1 rounded-full text-sm font-bold",
                 b.tipo === "AA" && "bg-purple-100 text-purple-700",
@@ -38,11 +38,11 @@ export function BandejasSection({ data, onUpdate, isMobile = false }: BandejasSe
                 Bandeja {b.tipo}
               </span>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <NumpadInput label="Entradas" value={b.entradas} onChange={(v) => handleChange(i, "entradas", v)} min={0} step={1} suffix="uds" />
-              <NumpadInput label="Salidas" value={b.salidas} onChange={(v) => handleChange(i, "salidas", v)} min={0} step={1} suffix="uds" />
-              <NumpadInput label="Saldo Anterior" value={b.saldoAnterior} onChange={(v) => handleChange(i, "saldoAnterior", v)} min={0} step={1} suffix="uds" />
-              <NumpadInput label="Saldo Bodega" value={b.saldoBodega} onChange={(v) => handleChange(i, "saldoBodega", v)} min={0} step={1} suffix="uds" />
+            <div className="grid grid-cols-2 gap-2">
+              <NumpadInput label="Entrada" value={b.entradas} onChange={(v) => handleChange(i, "entradas", v)} min={0} step={1} compact showStepper={false} />
+              <NumpadInput label="Salida" value={b.salidas} onChange={(v) => handleChange(i, "salidas", v)} min={0} step={1} compact showStepper={false} />
+              <NumpadInput label="Saldo anterior" value={b.saldoAnterior} onChange={(v) => handleChange(i, "saldoAnterior", v)} min={0} step={1} compact showStepper={false} />
+              <NumpadInput label="Bodega" value={b.saldoBodega} onChange={(v) => handleChange(i, "saldoBodega", v)} min={0} step={1} compact showStepper={false} />
             </div>
           </div>
         ))}
@@ -51,21 +51,21 @@ export function BandejasSection({ data, onUpdate, isMobile = false }: BandejasSe
   }
 
   return (
-    <div className="overflow-x-auto" role="region" aria-label="Tabla de inventario de bandejas">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto -mx-1" role="region" aria-label="Tabla de inventario de bandejas">
+      <table className="w-full text-sm min-w-[560px]">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="p-3 text-left font-medium text-gray-600">Tipo</th>
-            <th className="p-3 text-right font-medium text-gray-600">Entradas</th>
-            <th className="p-3 text-right font-medium text-gray-600">Salidas</th>
-            <th className="p-3 text-right font-medium text-gray-600">Saldo Ant.</th>
-            <th className="p-3 text-right font-medium text-gray-600">Saldo Bodega</th>
+            <th className="p-2 text-left font-medium text-gray-600">Tipo</th>
+            <th className="p-2 text-right font-medium text-gray-600">Entrada</th>
+            <th className="p-2 text-right font-medium text-gray-600">Salida</th>
+            <th className="p-2 text-right font-medium text-gray-600">Saldo anterior</th>
+            <th className="p-2 text-right font-medium text-gray-600">Bodega</th>
           </tr>
         </thead>
         <tbody>
           {data.map((b, i) => (
             <tr key={b.tipo} className="border-b border-gray-100 hover:bg-gray-25">
-              <td className="p-3 font-medium text-gray-800">
+              <td className="p-2 font-medium text-gray-800">
                 <span className={cn(
                   "px-2 py-1 rounded-full text-xs font-bold",
                   b.tipo === "AA" && "bg-purple-100 text-purple-700",
@@ -75,10 +75,10 @@ export function BandejasSection({ data, onUpdate, isMobile = false }: BandejasSe
                   {b.tipo}
                 </span>
               </td>
-              <td className="p-2"><NumpadInput value={b.entradas} onChange={(v) => handleChange(i, "entradas", v)} min={0} step={1} className="w-full" /></td>
-              <td className="p-2"><NumpadInput value={b.salidas} onChange={(v) => handleChange(i, "salidas", v)} min={0} step={1} className="w-full" /></td>
-              <td className="p-2"><NumpadInput value={b.saldoAnterior} onChange={(v) => handleChange(i, "saldoAnterior", v)} min={0} step={1} className="w-full" /></td>
-              <td className="p-2"><NumpadInput value={b.saldoBodega} onChange={(v) => handleChange(i, "saldoBodega", v)} min={0} step={1} className="w-full" /></td>
+              <td className="p-1.5 w-[110px]"><NumpadInput value={b.entradas} onChange={(v) => handleChange(i, "entradas", v)} min={0} step={1} compact showStepper={false} className="w-full" /></td>
+              <td className="p-1.5 w-[110px]"><NumpadInput value={b.salidas} onChange={(v) => handleChange(i, "salidas", v)} min={0} step={1} compact showStepper={false} className="w-full" /></td>
+              <td className="p-1.5 w-[110px]"><NumpadInput value={b.saldoAnterior} onChange={(v) => handleChange(i, "saldoAnterior", v)} min={0} step={1} compact showStepper={false} className="w-full" /></td>
+              <td className="p-1.5 w-[110px]"><NumpadInput value={b.saldoBodega} onChange={(v) => handleChange(i, "saldoBodega", v)} min={0} step={1} compact showStepper={false} className="w-full" /></td>
             </tr>
           ))}
         </tbody>

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Req, Res, UnauthorizedException } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { Response, Request } from 'express';
@@ -50,19 +50,36 @@ export class AuthHexaController {
   @Public()
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @ApiOperation({ summary: 'Refrescar token' })
-  async refresh(@Body() dto: RefreshTokenDto, @Res({ passthrough: true }) res: Response) {
-    const result = await this.refreshTokenUseCase.execute({ token: dto.refreshToken });
+  async refresh(
+    @Body() dto: RefreshTokenDto,
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const token = dto?.refreshToken || (req as any).cookies?.refreshToken;
+    if (!token) {
+      throw new UnauthorizedException('Refresh token no proporcionado');
+    }
+    const result = await this.refreshTokenUseCase.execute({ token });
     this.setAuthCookies(res, result.accessToken, result.refreshToken);
-    return { accessToken: result.accessToken };
+    return { accessToken: result.accessToken, refreshToken: result.refreshToken };
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Obtener usuario autenticado' })
+  async me(@Req() req: any) {
+    return { user: req.user };
   }
 
   @Post('logout')
   @ApiOperation({ summary: 'Cerrar sesión' })
   async logout(@Req() req: any, @Res({ passthrough: true }) res: Response) {
-    const userId = req.user?.sub;
+    const userId = req.user?.id;
     res.clearCookie('accessToken', { path: '/' });
     res.clearCookie('refreshToken', { path: '/' });
     res.clearCookie('user', { path: '/' });
-    return this.logoutUseCase.execute({ userId, ip: req.ip });
+    if (userId) {
+      return this.logoutUseCase.execute({ userId, ip: req.ip });
+    }
+    return { message: 'Sesión cerrada exitosamente' };
   }
 }

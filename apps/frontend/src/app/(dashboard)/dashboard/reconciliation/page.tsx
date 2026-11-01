@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { reconciliationService } from "@/lib/api";
+import { formatDateOnly } from "@/lib/utils";
 
 interface DetalleItem {
   concepto: string;
@@ -188,7 +189,7 @@ export default function ReconciliationPage() {
                   onClick={() => setSelected(c)}
                 >
                   <td className="p-3 text-body-sm text-on-surface">
-                    {new Date(c.fecha).toLocaleDateString("es-ES", { weekday: "short", day: "2-digit", month: "short" })}
+                    {formatDateOnly(c.fecha)}
                   </td>
                   <td className="p-3 text-center">{getEstadoBadge(c.estado)}</td>
                   <td className="p-3 text-right text-label-data-sm font-bold text-primary">
@@ -223,7 +224,7 @@ export default function ReconciliationPage() {
             <div>
               <h2 className="section-title">
                 Detalle de Conciliación —{" "}
-                {new Date(selected.fecha).toLocaleDateString("es-ES", { weekday: "long", day: "2-digit", month: "long", year: "numeric" })}
+                {formatDateOnly(selected.fecha)}
               </h2>
               <p className="text-body-sm text-outline">
                 Comparación de valores de imagen OCR vs. datos Excel

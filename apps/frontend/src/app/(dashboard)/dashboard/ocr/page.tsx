@@ -50,14 +50,14 @@ export default function OcrPage() {
             <div className="border-2 border-dashed rounded-lg p-8 text-center">
               <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" id="fileInput" />
               <label htmlFor="fileInput" className="cursor-pointer">
-                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="mx-auto h-12 w-12 text-outline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 <p className="mt-2 text-sm text-muted-foreground">Haga clic para seleccionar una imagen</p>
               </label>
             </div>
             {preview && <img src={preview} alt="Vista previa" className="w-full rounded-lg border" />}
-            <Button onClick={processImage} disabled={!file || loading} className="w-full bg-green-600 hover:bg-green-700">
+            <Button onClick={processImage} disabled={!file || loading} className="w-full bg-brand hover:bg-brand-strong">
               {loading ? "Procesando OCR..." : "Procesar Imagen"}
             </Button>
           </CardContent>
@@ -71,8 +71,8 @@ export default function OcrPage() {
           <CardContent>
             {result ? (
               <div className="space-y-4">
-                <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                  <p className="text-sm font-medium text-green-700">Fecha detectada: {result.datosParseados?.fecha || "No detectada"}</p>
+                <div className="p-3 bg-brand-soft dark:bg-green-900/20 rounded-lg">
+                  <p className="text-sm font-medium text-brand-strong">Fecha detectada: {result.datosParseados?.fecha || "No detectada"}</p>
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">Galpones detectados:</h4>
@@ -91,7 +91,7 @@ export default function OcrPage() {
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">Texto original OCR:</h4>
-                  <pre className="text-xs bg-gray-50 dark:bg-gray-800 p-3 rounded-lg max-h-40 overflow-y-auto whitespace-pre-wrap">{result.textoOriginal}</pre>
+                  <pre className="text-xs bg-surface-low dark:bg-gray-800 p-3 rounded-lg max-h-40 overflow-y-auto whitespace-pre-wrap">{result.textoOriginal}</pre>
                 </div>
                 <Button variant="outline" className="w-full" disabled>Los datos se guardan automaticamente al procesar</Button>
               </div>

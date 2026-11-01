@@ -17,7 +17,7 @@ interface GalponSectionProps {
   data: GalponFormData[];
   onUpdate: (index: number, field: keyof GalponFormData, value: number) => void;
   isMobile?: boolean;
-  expandedGalpon?: string;
+  expandedGalpon?: string | null;
   onToggleGalpon?: (galponId: string) => void;
 }
 
@@ -76,8 +76,8 @@ export function GalponSection({
                 </div>
               </button>
 
-              <div id={`galpon-${d.galponId}`} className={cn("overflow-hidden transition-all duration-300", isExpanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0")}>
-                <div className="p-4 space-y-4 animate-slide-down">
+              <div id={`galpon-${d.galponId}`} className={cn("overflow-hidden transition-all duration-300", isExpanded ? "max-h-[28rem] opacity-100" : "max-h-0 opacity-0")}>
+                <div className="p-4 space-y-3 animate-slide-down">
                   <div className="grid grid-cols-2 gap-3">
                     <NumpadInput
                       label="Mortalidad"
@@ -85,18 +85,20 @@ export function GalponSection({
                       onChange={(v) => handleChange(i, "mortalidad", v)}
                       min={0}
                       step={1}
-                      suffix="uds"
+                      suffix="aves"
                     />
                     <NumpadInput
-                      label="Producción"
+                      label="Postura (huevos)"
                       value={d.produccion}
                       onChange={(v) => handleChange(i, "produccion", v)}
                       min={0}
                       step={1}
                       suffix="uds"
                     />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
                     <NumpadInput
-                      label="Alimento Ent. (kg)"
+                      label="Alimento entrada"
                       value={d.alimentoEntrada}
                       onChange={(v) => handleChange(i, "alimentoEntrada", v)}
                       min={0}
@@ -104,7 +106,7 @@ export function GalponSection({
                       suffix="kg"
                     />
                     <NumpadInput
-                      label="Alimento Cons. (kg)"
+                      label="Alimento consumo"
                       value={d.alimentoConsumo}
                       onChange={(v) => handleChange(i, "alimentoConsumo", v)}
                       min={0}
@@ -112,15 +114,6 @@ export function GalponSection({
                       suffix="kg"
                     />
                   </div>
-                  <NumpadInput
-                    label="Gallinas actuales"
-                    value={d.gallinas}
-                    onChange={(v) => handleChange(i, "gallinas", v)}
-                    min={0}
-                    step={1}
-                    suffix="uds"
-                    className="w-full"
-                  />
                 </div>
               </div>
             </div>
@@ -131,16 +124,15 @@ export function GalponSection({
   }
 
   return (
-    <div className="overflow-x-auto" role="region" aria-label="Tabla de galpones">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto -mx-1" role="region" aria-label="Tabla de galpones">
+      <table className="w-full text-sm min-w-[620px]">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="p-3 text-left font-medium text-gray-600">Galpón</th>
-            <th className="p-3 text-right font-medium text-gray-600">Mortalidad</th>
-            <th className="p-3 text-right font-medium text-gray-600">Producción</th>
-            <th className="p-3 text-right font-medium text-gray-600">Alim. Ent. (kg)</th>
-            <th className="p-3 text-right font-medium text-gray-600">Alim. Cons. (kg)</th>
-            <th className="p-3 text-right font-medium text-gray-600">Gallinas</th>
+            <th className="p-2 text-left font-medium text-gray-600">Galpón</th>
+            <th className="p-2 text-right font-medium text-gray-600">Mort.</th>
+            <th className="p-2 text-right font-medium text-gray-600">Alimento entrada (kg)</th>
+            <th className="p-2 text-right font-medium text-gray-600">Alimento consumo (kg)</th>
+            <th className="p-2 text-right font-medium text-gray-600">Postura (huevos)</th>
           </tr>
         </thead>
         <tbody>
@@ -148,21 +140,21 @@ export function GalponSection({
             const hasData = d.mortalidad > 0 || d.produccion > 0 || d.alimentoEntrada > 0 || d.alimentoConsumo > 0;
             return (
               <tr key={d.galponId} className={cn("border-b border-gray-100 hover:bg-gray-25", hasData && "bg-green-25")}>
-                <td className="p-3 font-medium text-gray-800">{d.codigo}</td>
                 <td className="p-2">
-                  <NumpadInput value={d.mortalidad} onChange={(v) => handleChange(i, "mortalidad", v)} min={0} step={1} className="w-full" />
+                  <p className="font-semibold text-gray-800 leading-tight">{d.codigo}</p>
+                  <p className="text-[11px] text-gray-400">{d.gallinas.toLocaleString()} gallinas</p>
                 </td>
-                <td className="p-2">
-                  <NumpadInput value={d.produccion} onChange={(v) => handleChange(i, "produccion", v)} min={0} step={1} className="w-full" />
+                <td className="p-1.5 w-[92px]">
+                  <NumpadInput value={d.mortalidad} onChange={(v) => handleChange(i, "mortalidad", v)} min={0} step={1} compact showStepper={false} className="w-full" />
                 </td>
-                <td className="p-2">
-                  <NumpadInput value={d.alimentoEntrada} onChange={(v) => handleChange(i, "alimentoEntrada", v)} min={0} step={0.1} className="w-full" />
+                <td className="p-1.5 w-[130px]">
+                  <NumpadInput value={d.alimentoEntrada} onChange={(v) => handleChange(i, "alimentoEntrada", v)} min={0} step={0.1} compact showStepper={false} className="w-full" />
                 </td>
-                <td className="p-2">
-                  <NumpadInput value={d.alimentoConsumo} onChange={(v) => handleChange(i, "alimentoConsumo", v)} min={0} step={0.1} className="w-full" />
+                <td className="p-1.5 w-[130px]">
+                  <NumpadInput value={d.alimentoConsumo} onChange={(v) => handleChange(i, "alimentoConsumo", v)} min={0} step={0.1} compact showStepper={false} className="w-full" />
                 </td>
-                <td className="p-2">
-                  <NumpadInput value={d.gallinas} onChange={(v) => handleChange(i, "gallinas", v)} min={0} step={1} className="w-full" />
+                <td className="p-1.5 w-[130px]">
+                  <NumpadInput value={d.produccion} onChange={(v) => handleChange(i, "produccion", v)} min={0} step={1} compact showStepper={false} className="w-full" />
                 </td>
               </tr>
             );
@@ -170,12 +162,11 @@ export function GalponSection({
         </tbody>
         <tfoot>
           <tr className="font-bold bg-gray-50 border-t-2 border-gray-200">
-            <td className="p-3">TOTAL</td>
-            <td className="p-3 text-right">{data.reduce((s, d) => s + d.mortalidad, 0).toLocaleString()}</td>
-            <td className="p-3 text-right">{data.reduce((s, d) => s + d.produccion, 0).toLocaleString()}</td>
-            <td className="p-3 text-right">{data.reduce((s, d) => s + d.alimentoEntrada, 0).toLocaleString()}</td>
-            <td className="p-3 text-right">{data.reduce((s, d) => s + d.alimentoConsumo, 0).toFixed(1)}</td>
-            <td className="p-3 text-right">{data.reduce((s, d) => s + d.gallinas, 0).toLocaleString()}</td>
+            <td className="p-2">TOTAL</td>
+            <td className="p-2 text-right tabular-nums">{data.reduce((s, d) => s + Number(d.mortalidad || 0), 0).toLocaleString()}</td>
+            <td className="p-2 text-right tabular-nums">{data.reduce((s, d) => s + Number(d.alimentoEntrada || 0), 0).toLocaleString()}</td>
+            <td className="p-2 text-right tabular-nums">{data.reduce((s, d) => s + Number(d.alimentoConsumo || 0), 0).toLocaleString()}</td>
+            <td className="p-2 text-right tabular-nums">{data.reduce((s, d) => s + Number(d.produccion || 0), 0).toLocaleString()}</td>
           </tr>
         </tfoot>
       </table>

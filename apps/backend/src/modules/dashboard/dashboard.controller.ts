@@ -13,14 +13,22 @@ export class DashboardController {
 
   @Get('kpis')
   @ApiOperation({ summary: 'KPIs del dashboard (filtrado por rol)' })
-  getKPIs(@Query('fecha') fecha?: string, @CurrentUser() user?: any) {
-    return this.dashboardService.getKPIs(fecha, user?.id, user?.rol);
+  getKPIs(
+    @Query('fecha') fecha?: string,
+    @Query('dias') dias?: string,
+    @CurrentUser() user?: any,
+  ) {
+    return this.dashboardService.getKPIs(fecha, user?.id, user?.rol, dias ? Number(dias) : 1);
   }
 
   @Get('produccion-por-galpon')
   @ApiOperation({ summary: 'Producción por galpón (filtrado por rol)' })
-  getProduccionPorGalpon(@Query('fecha') fecha?: string, @CurrentUser() user?: any) {
-    return this.dashboardService.getProduccionPorGalpon(fecha, user?.id, user?.rol);
+  getProduccionPorGalpon(
+    @Query('fecha') fecha?: string,
+    @Query('dias') dias?: string,
+    @CurrentUser() user?: any,
+  ) {
+    return this.dashboardService.getProduccionPorGalpon(fecha, user?.id, user?.rol, dias ? Number(dias) : 1);
   }
 
   @Get('tendencia-mensual')

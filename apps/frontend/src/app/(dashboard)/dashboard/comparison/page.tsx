@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { comparisonService, productionService, excelService } from "@/lib/api";
+import { formatDateOnly } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -65,7 +66,7 @@ export default function ComparisonPage() {
                 <option value="">Seleccionar reporte...</option>
                 {reportesOcr.map((r: any) => (
                   <option key={r.id} value={r.id}>
-                    {new Date(r.fecha).toLocaleDateString()} - {r.galponero?.nombre} ({r.fuente})
+                    {formatDateOnly(r.fecha)} - {r.galponero?.nombre} ({r.fuente})
                   </option>
                 ))}
               </select>
@@ -76,13 +77,13 @@ export default function ComparisonPage() {
                 <option value="">Seleccionar archivo...</option>
                 {reportesExcel.map((r: any) => (
                   <option key={r.id} value={r.id}>
-                    {new Date(r.fecha).toLocaleDateString()} - {r.nombreArchivo}
+                    {formatDateOnly(r.fecha)} - {r.nombreArchivo}
                   </option>
                 ))}
               </select>
             </div>
           </div>
-          <Button onClick={compare} disabled={!selectedOcr || !selectedExcel || loading} className="bg-green-600 hover:bg-green-700">
+          <Button onClick={compare} disabled={!selectedOcr || !selectedExcel || loading} className="bg-brand hover:bg-brand-strong">
             {loading ? "Comparando..." : "Ejecutar Comparacion"}
           </Button>
         </CardContent>
@@ -94,15 +95,15 @@ export default function ComparisonPage() {
             <CardTitle>Resultado de Comparacion</CardTitle>
             <div className="flex gap-4 mt-2">
               <span className="text-sm">Total campos: <strong>{comparacion.comparacion?.totalCampos}</strong></span>
-              <span className="text-sm text-green-600">Correctos: <strong>{comparacion.comparacion?.camposCorrectos}</strong></span>
-              <span className="text-sm text-red-600">Con error: <strong>{comparacion.comparacion?.camposConError}</strong></span>
+              <span className="text-sm text-brand-strong">Correctos: <strong>{comparacion.comparacion?.camposCorrectos}</strong></span>
+              <span className="text-sm text-error">Con error: <strong>{comparacion.comparacion?.camposConError}</strong></span>
             </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b bg-gray-50 dark:bg-gray-800">
+                  <tr className="border-b bg-surface-low dark:bg-gray-800">
                     <th className="p-2 text-left">Galpon</th>
                     <th className="p-2 text-left">Campo</th>
                     <th className="p-2 text-right">Valor OCR</th>
@@ -113,16 +114,16 @@ export default function ComparisonPage() {
                 </thead>
                 <tbody>
                   {comparacion.detallesGalpon?.map((d: any, i: number) => (
-                    <tr key={i} className={`border-b ${d.estado === "ERROR" ? "bg-red-50 dark:bg-red-900/20" : d.estado === "REVISAR" ? "bg-yellow-50 dark:bg-yellow-900/20" : ""}`}>
+                    <tr key={i} className={`border-b ${d.estado === "ERROR" ? "bg-error-container dark:bg-red-900/20" : d.estado === "REVISAR" ? "bg-tertiary-fixed dark:bg-yellow-900/20" : ""}`}>
                       <td className="p-2">{d.galpon}</td>
                       <td className="p-2">{d.campo}</td>
                       <td className="p-2 text-right">{d.valorOcr?.toLocaleString()}</td>
                       <td className="p-2 text-right">{d.valorExcel?.toLocaleString()}</td>
-                      <td className={`p-2 text-right font-medium ${d.diferencia > 0 ? "text-red-600" : d.diferencia < 0 ? "text-blue-600" : ""}`}>
+                      <td className={`p-2 text-right font-medium ${d.diferencia > 0 ? "text-error" : d.diferencia < 0 ? "text-blue-600" : ""}`}>
                         {d.diferencia?.toLocaleString()}
                       </td>
                       <td className="p-2 text-center">
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${d.estado === "CORRECTO" ? "bg-green-100 text-green-700" : d.estado === "REVISAR" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${d.estado === "CORRECTO" ? "bg-green-100 text-brand-strong" : d.estado === "REVISAR" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
                           {d.estado}
                         </span>
                       </td>

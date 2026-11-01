@@ -19,10 +19,18 @@ export class RefreshTokenUseCase {
   ) {}
 
   async execute(command: RefreshTokenCommand): Promise<RefreshTokenResult> {
+    if (!command?.token) {
+      throw new UnauthorizedException('Refresh token no proporcionado');
+    }
+
     const refreshToken = await this.findRefreshToken(command.token);
 
     if (!refreshToken || refreshToken.expiresAt < new Date()) {
       throw new UnauthorizedException('Refresh token inválido o expirado');
+    }
+
+    if (refreshToken.usuario?.estado && refreshToken.usuario.estado !== 'ACTIVO') {
+      throw new UnauthorizedException('Usuario inactivo');
     }
 
     await this.deleteRefreshToken(refreshToken.id);

@@ -28,17 +28,27 @@ import * as bcrypt from 'bcryptjs';
     { provide: 'IJwtPort', useClass: JwtAdapter },
     {
       provide: LoginUseCase,
-      useFactory: (usuarioRepo: any, jwtPort: any, auditPort: any) => {
-        return new LoginUseCase(usuarioRepo, jwtPort, auditPort, bcrypt.compare, bcrypt.hash);
+      useFactory: (usuarioRepo: any, jwtPort: any, auditPort: any, prisma: PrismaService) => {
+        const refreshTokenStore = {
+          save: async (userId: string, token: string, expiresAt: Date) => {
+            await prisma.refreshToken.create({ data: { token, usuarioId: userId, expiresAt } });
+          },
+        };
+        return new LoginUseCase(usuarioRepo, jwtPort, auditPort, bcrypt.compare, bcrypt.hash, refreshTokenStore);
       },
-      inject: ['IUsuarioRepository', 'IJwtPort', 'IAuditPort'],
+      inject: ['IUsuarioRepository', 'IJwtPort', 'IAuditPort', PrismaService],
     },
     {
       provide: RegisterUseCase,
-      useFactory: (usuarioRepo: any, jwtPort: any, auditPort: any) => {
-        return new RegisterUseCase(usuarioRepo, jwtPort, auditPort, bcrypt.hash);
+      useFactory: (usuarioRepo: any, jwtPort: any, auditPort: any, prisma: PrismaService) => {
+        const refreshTokenStore = {
+          save: async (userId: string, token: string, expiresAt: Date) => {
+            await prisma.refreshToken.create({ data: { token, usuarioId: userId, expiresAt } });
+          },
+        };
+        return new RegisterUseCase(usuarioRepo, jwtPort, auditPort, bcrypt.hash, refreshTokenStore);
       },
-      inject: ['IUsuarioRepository', 'IJwtPort', 'IAuditPort'],
+      inject: ['IUsuarioRepository', 'IJwtPort', 'IAuditPort', PrismaService],
     },
     {
       provide: RefreshTokenUseCase,
@@ -59,7 +69,10 @@ import * as bcrypt from 'bcryptjs';
     {
       provide: LogoutUseCase,
       useFactory: (auditPort: any, prisma: PrismaService) => {
-        return new LogoutUseCase(auditPort, async (userId: string) => { await prisma.refreshToken.deleteMany({ where: { usuarioId: userId } }); });
+        return new LogoutUseCase(auditPort, async (userId: string) => {
+          if (!userId) return;
+          await prisma.refreshToken.deleteMany({ where: { usuarioId: userId } });
+        });
       },
       inject: ['IAuditPort', PrismaService],
     },

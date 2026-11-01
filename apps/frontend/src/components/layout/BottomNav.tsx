@@ -61,6 +61,18 @@ const allNavItems: NavItem[] = [
     roles: ["ADMINISTRADOR", "RESPONSABLE_PRODUCCION", "GALPONERO", "CONTADOR", "AUDITOR"],
   },
   {
+    label: "Reportes",
+    href: "/dashboard/reports",
+    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-6m3 6V7m3 10v-3M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2z" /></svg>,
+    roles: ["ADMINISTRADOR", "CONTADOR", "AUDITOR", "RESPONSABLE_PRODUCCION"],
+  },
+  {
+    label: "Auditoría",
+    href: "/dashboard/audit",
+    icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l7 3v5c0 4.418-2.91 8.457-7 9.5-4.09-1.043-7-5.082-7-9.5V6l7-3zM9 12l2 2 4-4" /></svg>,
+    roles: ["ADMINISTRADOR", "AUDITOR"],
+  },
+  {
     label: "Usuarios",
     href: "/dashboard/users",
     icon: <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
@@ -69,12 +81,12 @@ const allNavItems: NavItem[] = [
 ];
 
 const rolNavConfig: Record<string, string[]> = {
-  GALPONERO: ["Inicio", "Reporte", "Huevos", "Bandejas", "Perfil"],
-  CONTADOR: ["Inicio", "Costos", "Conciliación", "Excel", "Perfil"],
-  ADMINISTRADOR: ["Inicio", "Galpones", "Usuarios", "Reportes", "Perfil"],
-  RESPONSABLE_PRODUCCION: ["Inicio", "Reporte", "Galpones", "Excel", "Perfil"],
-  ALMACENISTA: ["Inicio", "Huevos", "Bandejas", "Inventario", "Perfil"],
-  AUDITOR: ["Inicio", "Reportes", "Conciliación", "Auditoría", "Perfil"],
+  GALPONERO: ["Reporte", "Huevos", "Bandejas"],
+  CONTADOR: ["Inicio", "Costos", "Conciliación", "Excel", "Reportes"],
+  ADMINISTRADOR: ["Inicio", "Galpones", "Usuarios", "Reportes", "Auditoría"],
+  RESPONSABLE_PRODUCCION: ["Inicio", "Reporte", "Galpones", "Excel", "Reportes"],
+  ALMACENISTA: ["Inicio", "Huevos", "Bandejas"],
+  AUDITOR: ["Inicio", "Reportes", "Conciliación", "Auditoría"],
 };
 
 interface BottomNavProps {
@@ -141,61 +153,108 @@ interface DesktopSidebarProps {
   className?: string;
 }
 
+const desktopIconNames: Record<string, string> = {
+  "/dashboard": "space_dashboard",
+  "/dashboard/production": "edit_note",
+  "/dashboard/inventory": "inventory_2",
+  "/dashboard/costs": "payments",
+  "/dashboard/reconciliation": "fact_check",
+  "/dashboard/excel": "upload_file",
+  "/dashboard/galpones": "warehouse",
+  "/dashboard/reports": "monitoring",
+  "/dashboard/audit": "verified_user",
+  "/dashboard/users": "group",
+};
+
+const rolLabelsShort: Record<string, string> = {
+  ADMINISTRADOR: "Administrador",
+  CONTADOR: "Contador",
+  RESPONSABLE_PRODUCCION: "Resp. Producción",
+  GALPONERO: "Galponero",
+  AUDITOR: "Auditor",
+  ALMACENISTA: "Almacenista",
+};
+
 export function DesktopSidebar({ userRole, userName, className }: DesktopSidebarProps) {
   const pathname = usePathname();
-  const allowedLabels = rolNavConfig[userRole] || [];
+  const allowedLabels = rolNavConfig[userRole] || ["Inicio"];
   const navItems = allNavItems.filter((item) => allowedLabels.includes(item.label));
 
   return (
-    <aside className={cn("w-64 h-screen flex flex-col bg-green-900 text-white", className)}>
-      <div className="p-5 border-b border-white/10">
+    <aside className={cn("w-72 h-screen flex flex-col bg-surface-lowest border-r border-line", className)}>
+      <div className="px-5 pt-6 pb-4">
         <div className="flex items-center gap-3">
-          <svg width="40" height="40" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="48" height="48" rx="12" fill="#114232" />
-            <path d="M24 10C17.5 10 13 16 13 24C13 32 17.8 38 24 38C30.2 38 35 32 35 24C35 16 30.5 10 24 10Z" stroke="#34D399" strokeWidth="2.5" strokeLinecap="round" />
-            <path d="M24 16V32M18 24H30" stroke="#A7F3D0" strokeWidth="2" strokeLinecap="round" />
-            <circle cx="24" cy="24" r="4" fill="#F59E0B" />
-            <path d="M33 13L37 9M37 13L33 9" stroke="#34D399" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-          <div>
-            <h1 className="font-bold text-white text-lg tracking-tight">Avicola ERP</h1>
-            <p className="text-xs text-green-300/60">Llano Grande</p>
+          <div className="w-11 h-11 rounded-2xl bg-primary flex items-center justify-center shadow-sm">
+            <span className="material-symbols-outlined text-secondary-fixed text-[24px]" style={{ fontVariationSettings: "'FILL' 1, 'wght' 500" }}>
+              egg_alt
+            </span>
+          </div>
+          <div className="min-w-0">
+            <h1 className="font-extrabold text-ink text-[17px] tracking-tight leading-tight">Avícola ERP</h1>
+            <p className="text-[11px] text-ink-soft font-medium tracking-wide">GESTIÓN DE GALPONES</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+      <div className="px-4 pb-4">
+        <button className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl border border-line bg-surface-low/60 hover:bg-surface-low transition-colors group">
+          <span className="icon-chip bg-brand-soft text-brand-strong">
+            <span className="material-symbols-outlined">home_work</span>
+          </span>
+          <span className="flex-1 min-w-0 text-left">
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.08em] text-ink-soft">Granja activa</span>
+            <span className="block text-sm font-semibold text-ink truncate">Granja Llano Grande</span>
+          </span>
+          <span className="material-symbols-outlined text-[18px] text-outline group-hover:text-brand">expand_more</span>
+        </button>
+      </div>
+
+      <div className="px-5 pb-2">
+        <p className="eyebrow">Operaciones &amp; control</p>
+      </div>
+
+      <nav className="flex-1 px-4 pb-4 space-y-1 overflow-y-auto scrollbar-thin">
         {navItems.map((item) => {
           const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(item.href));
           return (
             <a
               key={item.href}
               href={item.href}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-                isActive
-                  ? "bg-white/15 text-white shadow-sm"
-                  : "text-green-100 hover:bg-white/8 hover:text-white"
-              )}
+              aria-current={isActive ? "page" : undefined}
+              className={cn("nav-pill", isActive ? "nav-pill-active" : "nav-pill-idle")}
             >
-              <span className={cn("flex-shrink-0", isActive ? "text-green-300" : "text-green-300/40")}>
-                {item.icon}
+              <span className="material-symbols-outlined text-[21px]">
+                {desktopIconNames[item.href] || "circle"}
               </span>
-              {item.label}
-              {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-green-400" />}
+              <span className="truncate">{item.label}</span>
+              {isActive && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-secondary-fixed" />}
             </a>
           );
         })}
       </nav>
 
-      <div className="p-4 border-t border-white/10">
+      <div className="px-4 pb-3">
+        <div className="rounded-2xl border border-line bg-surface-low/60 px-3 py-2.5 flex items-center gap-2.5">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand opacity-50" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-brand" />
+          </span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[11px] font-semibold text-ink leading-tight">Sincronizado v2.4</p>
+            <p className="text-[10px] text-ink-soft leading-tight">99.8% Online</p>
+          </div>
+          <span className="material-symbols-outlined text-[16px] text-ink-soft">cloud_done</span>
+        </div>
+      </div>
+
+      <div className="p-4 border-t border-line">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold text-green-900 bg-green-300">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-brand-dark bg-brand-soft">
             {userName ? `${userName[0]}` : "U"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">{userName || "Usuario"}</p>
-            <p className="text-xs text-green-300/50 truncate capitalize">{userRole?.toLowerCase()}</p>
+            <p className="text-sm font-semibold text-ink truncate">{userName || "Usuario"}</p>
+            <p className="text-[11px] text-ink-soft truncate">{rolLabelsShort[userRole] || userRole}</p>
           </div>
         </div>
       </div>

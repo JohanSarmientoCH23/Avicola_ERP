@@ -43,8 +43,9 @@ export function processClasificacion(sheetName: string, sheetData: any[][]): She
 
     const extraFromHeaders = extractEggFromHeaders(d, base.headers);
     for (const [key, val] of Object.entries(extraFromHeaders)) {
-      if (!eggCounts[key] || eggCounts[key] === 0) {
-        eggCounts[key] = val;
+      const lowerKey = key.toLowerCase();
+      if (!eggCounts[lowerKey] || eggCounts[lowerKey] === 0) {
+        eggCounts[lowerKey] = val;
         total += val;
       }
     }

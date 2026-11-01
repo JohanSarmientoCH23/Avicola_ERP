@@ -1,7 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, ConflictException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { CreateDespachoDto } from './dto/create-despacho.dto';
+
+type Tx = Prisma.TransactionClient;
 
 @Injectable()
 export class DespachosService {
@@ -26,14 +29,10 @@ export class DespachosService {
       const tipoHuevo = await this.prisma.tipoHuevo.findUnique({ where: { id: detalle.tipoHuevoId } });
       if (!tipoHuevo) throw new NotFoundException(`Tipo de huevo ${detalle.tipoHuevoId} no encontrado`);
 
-      const inventario = await this.prisma.inventarioHuevo.findFirst({
-        where: { tipoHuevoId: detalle.tipoHuevoId },
-        orderBy: { fecha: 'desc' },
-      });
-
-      if (inventario && Number(inventario.saldoFinal) < detalle.cantidad) {
+      const saldo = await this.getSaldoHuevo(this.prisma, detalle.tipoHuevoId);
+      if (saldo < detalle.cantidad) {
         throw new BadRequestException(
-          `Saldo insuficiente de ${tipoHuevo.codigo}: disponible ${inventario.saldoFinal}, solicitado ${detalle.cantidad}`
+          `Saldo insuficiente de ${tipoHuevo.codigo}: disponible ${saldo}, solicitado ${detalle.cantidad}`
         );
       }
     }
@@ -61,29 +60,19 @@ export class DespachosService {
             observacion: detalle.observacion,
           },
         });
-
-        await tx.movimientoHuevo.create({
-          data: {
-            fecha: new Date(dto.fecha),
-            tipoMovimiento: 'DESPACHO',
-            tipoHuevoId: detalle.tipoHuevoId,
-            cantidad: detalle.cantidad,
-            destino: cliente.razonSocial,
-            referencia: `Despacho ${despacho.id}`,
-            usuarioId,
-            observacion: `Despacho a ${cliente.razonSocial}`,
-          },
-        });
       }
 
-      await this.auditService.log({
-        usuarioId,
-        accion: 'CREAR_DESPACHO',
-        entidad: 'DESPACHO',
-        entidadId: despacho.id,
-        cambios: { cliente: cliente.razonSocial, totalItems: dto.detalles.length },
-        ip,
-      });
+      await this.auditService.log(
+        {
+          usuarioId,
+          accion: 'CREAR_DESPACHO',
+          entidad: 'DESPACHO',
+          entidadId: despacho.id,
+          cambios: { cliente: cliente.razonSocial, totalItems: dto.detalles.length },
+          ip,
+        },
+        tx,
+      );
 
       return tx.despacho.findUnique({
         where: { id: despacho.id },
@@ -97,8 +86,8 @@ export class DespachosService {
   }
 
   async findAll(params: { page?: number; limit?: number; estado?: string; fechaInicio?: string; fechaFin?: string }) {
-    const page = params.page || 1;
-    const limit = params.limit || 20;
+    const page = Math.max(1, Number(params.page) || 1);
+    const limit = Math.min(100, Math.max(1, Number(params.limit) || 20));
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -114,7 +103,7 @@ export class DespachosService {
         where,
         skip,
         take: limit,
-        orderBy: { fecha: 'desc' },
+        orderBy: [{ fecha: 'desc' }, { createdAt: 'desc' }],
         include: {
           cliente: true,
           detalles: { include: { tipoHuevo: { select: { codigo: true } } } },
@@ -125,7 +114,7 @@ export class DespachosService {
       this.prisma.despacho.count({ where }),
     ]);
 
-    return { data, total, page, totalPages: Math.ceil(total / limit) };
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async findOne(id: string) {
@@ -143,73 +132,161 @@ export class DespachosService {
   }
 
   async approve(id: string, usuarioId: string, ip?: string) {
-    const despacho = await this.prisma.despacho.findUnique({ where: { id } });
-    if (!despacho) throw new NotFoundException('Despacho no encontrado');
-    if (despacho.estado === 'APROBADO') throw new BadRequestException('El despacho ya está aprobado');
-    if (despacho.estado === 'CANCELADO') throw new ForbiddenException('No se puede aprobar un despacho cancelado');
+    return this.prisma.$transaction(
+      async (tx) => {
+        const claimed = await tx.despacho.updateMany({
+          where: { id, estado: { notIn: ['APROBADO', 'CANCELADO'] } },
+          data: { estado: 'APROBADO' },
+        });
+        if (claimed.count === 0) {
+          const actual = await tx.despacho.findUnique({ where: { id } });
+          if (!actual) throw new NotFoundException('Despacho no encontrado');
+          if (actual.estado === 'APROBADO') throw new BadRequestException('El despacho ya está aprobado');
+          throw new ForbiddenException('No se puede aprobar un despacho cancelado');
+        }
 
-    return this.prisma.$transaction(async (tx) => {
-      await tx.despachoAprobacion.upsert({
-        where: { despachoId: id },
-        update: { estado: 'APROBADO', aprobadoPorId: usuarioId, aprobadoEn: new Date() },
-        create: { despachoId: id, estado: 'APROBADO', aprobadoPorId: usuarioId, aprobadoEn: new Date() },
-      });
+        const despacho = await tx.despacho.findUnique({ where: { id } });
+        if (!despacho) throw new NotFoundException('Despacho no encontrado');
+        const cliente = await tx.cliente.findUnique({ where: { id: despacho.clienteId } });
+        const detalles = await tx.despachoDetalle.findMany({ where: { despachoId: id } });
+        const fechaMovimiento = new Date();
 
-      const updated = await tx.despacho.update({
-        where: { id },
-        data: { estado: 'APROBADO' },
-      });
+        for (const detalle of detalles) {
+          const tipoHuevo = await tx.tipoHuevo.findUnique({ where: { id: detalle.tipoHuevoId } });
+          const saldo = await this.getSaldoHuevo(tx, detalle.tipoHuevoId);
+          if (saldo < detalle.cantidad) {
+            throw new BadRequestException(
+              `Saldo insuficiente de ${tipoHuevo?.codigo ?? detalle.tipoHuevoId} al aprobar: disponible ${saldo}, solicitado ${detalle.cantidad}`
+            );
+          }
 
-      const detalles = await tx.despachoDetalle.findMany({ where: { despachoId: id } });
-      for (const detalle of detalles) {
-        const ultimoInventario = await tx.inventarioHuevo.findFirst({
-          where: { tipoHuevoId: detalle.tipoHuevoId },
-          orderBy: { fecha: 'desc' },
+          await tx.movimientoHuevo.create({
+            data: {
+              fecha: fechaMovimiento,
+              tipoMovimiento: 'DESPACHO',
+              tipoHuevoId: detalle.tipoHuevoId,
+              cantidad: detalle.cantidad,
+              destino: cliente?.razonSocial,
+              referencia: `Despacho ${id}`,
+              usuarioId,
+              observacion: `Despacho a ${cliente?.razonSocial ?? 'cliente'}`,
+            },
+          });
+
+          await this.applyHuevoSnapshotVenta(tx, detalle.tipoHuevoId, fechaMovimiento, detalle.cantidad);
+        }
+
+        await tx.despachoAprobacion.upsert({
+          where: { despachoId: id },
+          update: { estado: 'APROBADO', aprobadoPorId: usuarioId, aprobadoEn: new Date() },
+          create: { despachoId: id, estado: 'APROBADO', aprobadoPorId: usuarioId, aprobadoEn: new Date() },
         });
 
-        const saldoAnterior = ultimoInventario ? Number(ultimoInventario.saldoFinal) : 0;
-        const nuevoSaldo = saldoAnterior - detalle.cantidad;
+        const updated = await tx.despacho.findUnique({ where: { id } });
 
-        await tx.inventarioHuevo.create({
-          data: {
-            tipoHuevoId: detalle.tipoHuevoId,
-            fecha: despacho.fecha,
-            saldoInicial: saldoAnterior,
-            ventas: detalle.cantidad,
-            saldoFinal: nuevoSaldo,
+        await this.auditService.log(
+          {
+            usuarioId,
+            accion: 'APROBAR_DESPACHO',
+            entidad: 'DESPACHO',
+            entidadId: id,
+            ip,
           },
-        });
-      }
+          tx,
+        );
 
-      await this.auditService.log({
-        usuarioId,
-        accion: 'APROBAR_DESPACHO',
-        entidad: 'DESPACHO',
-        entidadId: id,
-        ip,
-      });
-
-      return updated;
-    });
+        return updated;
+      },
+      { timeout: 15000 },
+    );
   }
 
   async cancel(id: string, usuarioId: string, motivo: string, ip?: string) {
-    const despacho = await this.prisma.despacho.findUnique({ where: { id } });
-    if (!despacho) throw new NotFoundException('Despacho no encontrado');
-    if (despacho.estado === 'APROBADO') throw new ForbiddenException('No se puede cancelar un despacho aprobado');
+    return this.prisma.$transaction(async (tx) => {
+      const claimed = await tx.despacho.updateMany({
+        where: { id, estado: { notIn: ['APROBADO', 'CANCELADO'] } },
+        data: { estado: 'CANCELADO', observaciones: motivo },
+      });
+      if (claimed.count === 0) {
+        const actual = await tx.despacho.findUnique({ where: { id } });
+        if (!actual) throw new NotFoundException('Despacho no encontrado');
+        if (actual.estado === 'APROBADO') throw new ForbiddenException('No se puede cancelar un despacho aprobado');
+        throw new ConflictException('El despacho ya está cancelado');
+      }
 
-    await this.auditService.log({
-      usuarioId,
-      accion: 'CANCELAR_DESPACHO',
-      entidad: 'DESPACHO',
-      entidadId: id,
-      cambios: { motivo },
-      ip,
+      // Limpieza defensiva: despachos creados antes de este fix registraban el
+      // movimiento al crear (estado PENDIENTE). Al cancelar, se revierten.
+      await tx.movimientoHuevo.deleteMany({
+        where: { referencia: `Despacho ${id}`, tipoMovimiento: 'DESPACHO' },
+      });
+
+      await this.auditService.log(
+        {
+          usuarioId,
+          accion: 'CANCELAR_DESPACHO',
+          entidad: 'DESPACHO',
+          entidadId: id,
+          cambios: { motivo },
+          ip,
+        },
+        tx,
+      );
+
+      return tx.despacho.findUnique({ where: { id } });
+    });
+  }
+
+  private async getSaldoHuevo(client: Tx | PrismaService, tipoHuevoId: string): Promise<number> {
+    const last = await client.inventarioHuevo.findFirst({
+      where: { tipoHuevoId },
+      orderBy: [{ fecha: 'desc' }, { createdAt: 'desc' }],
+    });
+    if (last) return Number(last.saldoFinal);
+
+    const movs = await client.movimientoHuevo.findMany({ where: { tipoHuevoId } });
+    return movs.reduce((acc, m) => {
+      const cantidad = Number(m.cantidad);
+      if (['ENTRADA', 'PRODUCCION', 'ENTRADA_LOTE', 'AJUSTE'].includes(m.tipoMovimiento)) {
+        return acc + cantidad;
+      }
+      return acc - cantidad;
+    }, 0);
+  }
+
+  private async applyHuevoSnapshotVenta(tx: Tx, tipoHuevoId: string, fecha: Date, cantidad: number) {
+    const existing = await tx.inventarioHuevo.findUnique({
+      where: { tipoHuevoId_fecha: { tipoHuevoId, fecha } },
     });
 
-    return this.prisma.despacho.update({
-      where: { id },
-      data: { estado: 'CANCELADO', observaciones: motivo },
+    if (existing) {
+      const ventas = existing.ventas + cantidad;
+      const saldoFinal = existing.saldoInicial + existing.produccion - ventas - existing.perdidas - existing.consumo;
+      if (saldoFinal < 0) {
+        throw new BadRequestException('El despacho dejaría el inventario de huevos con saldo negativo');
+      }
+      return tx.inventarioHuevo.update({
+        where: { id: existing.id },
+        data: { ventas, saldoFinal },
+      });
+    }
+
+    const prev = await tx.inventarioHuevo.findFirst({
+      where: { tipoHuevoId, fecha: { lt: fecha } },
+      orderBy: [{ fecha: 'desc' }, { createdAt: 'desc' }],
+    });
+    const saldoInicial = prev ? Number(prev.saldoFinal) : 0;
+    const saldoFinal = saldoInicial - cantidad;
+    if (saldoFinal < 0) {
+      throw new BadRequestException('El despacho dejaría el inventario de huevos con saldo negativo');
+    }
+    return tx.inventarioHuevo.create({
+      data: {
+        tipoHuevoId,
+        fecha,
+        saldoInicial,
+        ventas: cantidad,
+        saldoFinal,
+      },
     });
   }
 }

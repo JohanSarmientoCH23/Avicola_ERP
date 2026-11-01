@@ -94,7 +94,7 @@ export const authService = {
       setCookie('accessToken', data.accessToken);
     }
     if (data.refreshToken) setCookie('refreshToken', data.refreshToken);
-    if (data.user) setCookie('user', JSON.stringify(data.user));
+    if (data.user) setCookie('user', JSON.stringify(data.user), 60 * 60 * 24);
     return data;
   },
   register: async (data: any) => {
@@ -104,8 +104,13 @@ export const authService = {
       setCookie('accessToken', result.accessToken);
     }
     if (result.refreshToken) setCookie('refreshToken', result.refreshToken);
-    if (result.user) setCookie('user', JSON.stringify(result.user));
+    if (result.user) setCookie('user', JSON.stringify(result.user), 60 * 60 * 24);
     return result;
+  },
+  me: async () => {
+    const { data } = await api.get('/auth/me');
+    if (data?.user) setCookie('user', JSON.stringify(data.user), 60 * 60 * 24);
+    return data;
   },
   logout: async () => {
     try {
@@ -132,6 +137,7 @@ export const productionService = {
   getReports: (params?: any) => api.get('/production/reports', { params }),
   getReport: (id: string) => api.get(`/production/reports/${id}`),
   createReport: (data: any) => api.post('/production/reports', data),
+  updateReport: (id: string, data: any) => api.put(`/production/reports/${id}`, data),
   updateStatus: (id: string, estado: string) => api.put(`/production/reports/${id}/status`, { estado }),
   getTiposHuevo: () => api.get('/production/tipos-huevo'),
 };
@@ -185,8 +191,9 @@ export const reconciliationService = {
 };
 
 export const dashboardService = {
-  getKPIs: (fecha?: string) => api.get('/dashboard/kpis', { params: { fecha } }),
-  getProduccionPorGalpon: (fecha?: string) => api.get('/dashboard/produccion-por-galpon', { params: { fecha } }),
+  getKPIs: (params?: { fecha?: string; dias?: number }) => api.get('/dashboard/kpis', { params }),
+  getProduccionPorGalpon: (params?: { fecha?: string; dias?: number }) =>
+    api.get('/dashboard/produccion-por-galpon', { params }),
   getTendenciaMensual: (meses?: number) => api.get('/dashboard/tendencia-mensual', { params: { meses } }),
   getMortalidadPorGalpon: (fecha?: string) => api.get('/dashboard/mortalidad-por-galpon', { params: { fecha } }),
   getResumenDiario: () => api.get('/dashboard/resumen-diario'),

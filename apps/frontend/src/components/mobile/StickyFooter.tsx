@@ -44,7 +44,7 @@ export function SaveButton({
   className,
 }: SaveButtonProps) {
   const variants = {
-    primary: "bg-blue-600 hover:bg-blue-700",
+    primary: "bg-primary hover:bg-primary/90",
     secondary: "bg-gray-100 text-gray-700 hover:bg-gray-200",
     success: "bg-green-600 hover:bg-green-700",
   };

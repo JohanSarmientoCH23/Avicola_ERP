@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 import { DatabaseModule } from './database/database.module';
 import { InfrastructureModule } from './infrastructure/infrastructure.module';
 import { AuthHexaModule } from './adapters/web/auth/auth.hexa.module';
@@ -53,6 +54,9 @@ import configuration from './config/configuration';
     KardexModule,
     DespachosModule,
     SiloModule,
+  ],
+  providers: [
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
   ],
 })
 export class AppModule {}

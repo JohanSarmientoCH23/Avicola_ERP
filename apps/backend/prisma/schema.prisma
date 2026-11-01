@@ -60,6 +60,7 @@ enum TipoHuevoCodigo {
   A
   B
   REVOLTURA
+  REVOLTURA_BANDEJEADA
   C
   PIPO
   BLANCO

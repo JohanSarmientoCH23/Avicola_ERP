@@ -6,7 +6,9 @@ import { MobileHeader } from "@/components/layout/MobileHeader";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { DesktopSidebar } from "@/components/layout/BottomNav";
 import { DesktopHeader } from "@/components/layout/MobileHeader";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
+import { authService } from "@/lib/api";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -17,15 +19,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setSidebarOpen(false);
     if (typeof window !== "undefined") {
       const userCookie = document.cookie.split("; ").find((c) => c.startsWith("user="));
+      let parsed: any = null;
       if (userCookie) {
         try {
-          setUser(JSON.parse(decodeURIComponent(userCookie.split("=").slice(1).join("="))));
+          parsed = JSON.parse(decodeURIComponent(userCookie.split("=").slice(1).join("=")));
+          setUser(parsed);
         } catch {}
+      }
+      if (!parsed?.nombre || !parsed?.apellido || !parsed?.rol) {
+        authService.me().then((result) => {
+          if (result?.user) setUser(result.user);
+        }).catch(() => {});
       }
     }
   }, [pathname]);
 
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 1024;
+  const isMobile = useIsMobile(1024);
 
   const handleLogout = () => {
     if (typeof window !== "undefined") {
@@ -54,13 +63,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const title = pageTitles[pathname] || "Dashboard";
 
+  const displayName =
+    [user?.nombre, user?.apellido].filter(Boolean).join(" ").trim() ||
+    user?.email?.split("@")[0] ||
+    "Usuario";
+
+  const displayUser = user
+    ? {
+        ...user,
+        nombre: user.nombre?.trim() || user.email?.split("@")[0] || "Usuario",
+        apellido: user.apellido?.trim() || "",
+      }
+    : user;
+
   if (isMobile) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-canvas">
         <MobileHeader
           title={title}
           onMenuClick={() => setSidebarOpen(true)}
-          user={user}
+          user={displayUser}
         />
         <main className="pt-14 pb-20 overflow-y-auto">
           {children}
@@ -69,37 +91,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {sidebarOpen && (
           <div className="fixed inset-0 z-50" onClick={() => setSidebarOpen(false)}>
             <div className="absolute inset-0 bg-black/40" />
-            <div className="fixed inset-y-0 right-0 w-80 bg-white shadow-xl animate-slide-in">
-              <DesktopSidebar userRole={user?.rol} userName={`${user?.nombre} ${user?.apellido}`} />
+            <div className="fixed inset-y-0 right-0 w-72 bg-surface-lowest shadow-xl animate-slide-in">
+              <DesktopSidebar userRole={user?.rol} userName={displayName} />
             </div>
           </div>
         )}
 
-        <BottomNav userRole={user?.rol} userName={`${user?.nombre} ${user?.apellido}`} />
+        <BottomNav userRole={user?.rol} userName={displayName} />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-canvas overflow-hidden">
       {sidebarOpen && (
         <div className="fixed inset-0 bg-black/40 z-30 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
       <div className={cn(
         `${sidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`,
-        "fixed lg:relative z-40 h-full w-64 transition-transform duration-300"
+        "fixed lg:relative z-40 h-full w-72 transition-transform duration-300"
       )}>
-        <DesktopSidebar userRole={user?.rol} userName={`${user?.nombre} ${user?.apellido}`} />
+        <DesktopSidebar userRole={user?.rol} userName={displayName} />
       </div>
       <div className="flex-1 flex flex-col overflow-hidden min-w-0">
         <DesktopHeader
           title={title}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          user={user}
+          user={displayUser}
           onLogout={handleLogout}
         />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          {children}
+        <main className="flex-1 overflow-y-auto p-5 sm:p-6 lg:p-8">
+          <div className="mx-auto w-full max-w-[1500px]">
+            {children}
+          </div>
         </main>
       </div>
     </div>

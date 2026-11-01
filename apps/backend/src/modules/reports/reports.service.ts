@@ -10,6 +10,25 @@ export interface ReportFilters {
   tipoHuevoId?: string;
 }
 
+function parseFechaBase(fecha?: string): Date {
+  if (!fecha) {
+    const now = new Date();
+    return new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  }
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(fecha);
+  if (match) {
+    return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  }
+  const parsed = new Date(fecha);
+  return new Date(Date.UTC(parsed.getFullYear(), parsed.getMonth(), parsed.getDate()));
+}
+
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setUTCDate(result.getUTCDate() + days);
+  return result;
+}
+
 @Injectable()
 export class ReportsService {
   private readonly logger = new Logger(ReportsService.name);
@@ -17,17 +36,14 @@ export class ReportsService {
   constructor(private prisma: PrismaService) {}
 
   async getReporteDiario(filtros: ReportFilters) {
-    const fechaDate = filtros.fecha ? new Date(filtros.fecha) : new Date();
-    const start = new Date(fechaDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(fechaDate);
-    end.setHours(23, 59, 59, 999);
+    const dia = parseFechaBase(filtros.fecha);
+    const rango = { gte: dia, lt: addDays(dia, 1) };
 
     const galponFilter: any = {};
     if (filtros.galponId) galponFilter.galponId = filtros.galponId;
 
     const reportes = await this.prisma.reporteDiario.findMany({
-      where: { fecha: { gte: start, lte: end } },
+      where: { fecha: rango },
       include: {
         galponero: { select: { nombre: true, apellido: true } },
         detallesGalpon: {
@@ -55,7 +71,7 @@ export class ReportsService {
     }
 
     return {
-      fecha: filtros.fecha,
+      fecha: filtros.fecha ?? dia.toISOString().slice(0, 10),
       filtros,
       resumen: { totalProduccion, totalMortalidad, totalConsumo },
       reportes,
@@ -66,8 +82,8 @@ export class ReportsService {
     const where: any = {};
     if (filtros.fechaInicio || filtros.fechaFin) {
       where.fecha = {};
-      if (filtros.fechaInicio) where.fecha.gte = new Date(filtros.fechaInicio);
-      if (filtros.fechaFin) where.fecha.lte = new Date(filtros.fechaFin);
+      if (filtros.fechaInicio) where.fecha.gte = parseFechaBase(filtros.fechaInicio);
+      if (filtros.fechaFin) where.fecha.lt = addDays(parseFechaBase(filtros.fechaFin), 1);
     }
 
     const galponFilter: any = {};
@@ -85,26 +101,35 @@ export class ReportsService {
       orderBy: { fecha: 'asc' },
     });
 
-    const resumen = reportes.map(r => ({
-      fecha: r.fecha,
-      totalProduccion: r.detallesGalpon.reduce((sum, d) => sum + d.produccion, 0),
-      totalMortalidad: r.detallesGalpon.reduce((sum, d) => sum + d.mortalidad, 0),
-      totalConsumo: r.detallesGalpon.reduce((sum, d) => sum + Number(d.alimentoConsumo), 0),
-    }));
+    const porDia = new Map<string, { fecha: Date; totalProduccion: number; totalMortalidad: number; totalConsumo: number }>();
+    for (const r of reportes) {
+      const key = r.fecha.toISOString().slice(0, 10);
+      const acumulado = porDia.get(key) ?? { fecha: r.fecha, totalProduccion: 0, totalMortalidad: 0, totalConsumo: 0 };
+      for (const d of r.detallesGalpon) {
+        acumulado.totalProduccion += d.produccion;
+        acumulado.totalMortalidad += d.mortalidad;
+        acumulado.totalConsumo += Number(d.alimentoConsumo);
+      }
+      porDia.set(key, acumulado);
+    }
+
+    const resumen = Array.from(porDia.values()).sort(
+      (a, b) => a.fecha.getTime() - b.fecha.getTime(),
+    );
 
     return { filtros, resumen, totalReportes: reportes.length };
   }
 
   async getReporteMensual(anio: number, mes: number, filtros?: ReportFilters) {
-    const start = new Date(anio, mes - 1, 1);
-    const end = new Date(anio, mes, 0);
+    const start = new Date(Date.UTC(anio, mes - 1, 1));
+    const end = new Date(Date.UTC(anio, mes, 1));
 
     const galponFilter: any = {};
     if (filtros?.galponId) galponFilter.galponId = filtros.galponId;
 
     const detalles = await this.prisma.detalleGalpon.findMany({
       where: {
-        reporte: { fecha: { gte: start, lte: end } },
+        reporte: { fecha: { gte: start, lt: end } },
         ...galponFilter,
       },
       include: { galpon: true },
@@ -127,9 +152,11 @@ export class ReportsService {
       totalProduccion,
       totalMortalidad,
       totalConsumo,
-      diasReportados: await this.prisma.reporteDiario.count({
-        where: { fecha: { gte: start, lte: end } },
-      }),
+      diasReportados: (await this.prisma.reporteDiario.findMany({
+        where: { fecha: { gte: start, lt: end } },
+        select: { fecha: true },
+        distinct: ['fecha'],
+      })).length,
     };
   }
 
@@ -168,18 +195,15 @@ export class ReportsService {
   }
 
   async getCSVData(tipo: string, filtros: ReportFilters) {
-    const fechaDate = filtros.fecha ? new Date(filtros.fecha) : new Date();
-    const start = new Date(fechaDate);
-    start.setHours(0, 0, 0, 0);
-    const end = new Date(fechaDate);
-    end.setHours(23, 59, 59, 999);
+    const dia = parseFechaBase(filtros.fecha);
+    const rango = { gte: dia, lt: addDays(dia, 1) };
 
     const galponFilter: any = {};
     if (filtros.galponId) galponFilter.galponId = filtros.galponId;
 
     if (tipo === 'diario') {
       const reportes = await this.prisma.reporteDiario.findMany({
-        where: { fecha: { gte: start, lte: end } },
+        where: { fecha: rango },
         include: {
           galponero: { select: { nombre: true, apellido: true } },
           detallesGalpon: {

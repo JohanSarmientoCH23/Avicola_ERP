@@ -30,6 +30,9 @@ export class RegisterUseCase {
     private readonly jwtPort: IJwtPort,
     private readonly auditPort: IAuditPort,
     private readonly bcryptHash: (password: string, rounds: number) => Promise<string>,
+    private readonly refreshTokenStore?: {
+      save: (userId: string, token: string, expiresAt: Date) => Promise<void>;
+    },
   ) {}
 
   async execute(command: RegisterCommand): Promise<RegisterResult> {
@@ -51,6 +54,9 @@ export class RegisterUseCase {
     const payload = { sub: user.id, email: user.email, rol: user.rol };
     const accessToken = this.jwtPort.sign(payload);
     const refreshToken = this.jwtPort.sign({ sub: user.id }, { expiresIn: '7d' });
+    if (this.refreshTokenStore) {
+      await this.refreshTokenStore.save(user.id, refreshToken, new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
+    }
 
     await this.auditPort.log({
       usuarioId: user.id,

@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "TipoHuevoCodigo" ADD VALUE 'REVOLTURA_BANDEJEADA';

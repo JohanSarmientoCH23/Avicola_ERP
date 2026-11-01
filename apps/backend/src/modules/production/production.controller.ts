@@ -8,7 +8,7 @@ import { GalponAccess } from '../../common/decorators/galpon-access.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { ProductionService } from './production.service';
 import { CreateReportDto } from './dto/create-report.dto';
-import { PaginationDto } from '../../common/dto/pagination.dto';
+import { FindReportsQueryDto } from './dto/find-reports-query.dto';
 import { Rol } from '@prisma/client';
 import { Request } from 'express';
 
@@ -29,18 +29,26 @@ export class ProductionController {
 
   @Get('reports')
   @ApiOperation({ summary: 'Listar reportes diarios' })
-  findAll(
-    @Query() pagination: PaginationDto,
-    @Query('fecha') fecha?: string,
-    @CurrentUser() user?: any,
-  ) {
-    return this.productionService.findAllReports(pagination, fecha, user?.id, user?.rol);
+  findAll(@Query() query: FindReportsQueryDto, @CurrentUser() user?: any) {
+    return this.productionService.findAllReports(query, query.fecha, user?.id, user?.rol);
   }
 
   @Get('reports/:id')
   @ApiOperation({ summary: 'Obtener reporte' })
   findOne(@Param('id') id: string) {
     return this.productionService.findOneReport(id);
+  }
+
+  @Put('reports/:id')
+  @Roles(Rol.GALPONERO, Rol.RESPONSABLE_PRODUCCION, Rol.ADMINISTRADOR)
+  @ApiOperation({ summary: 'Actualizar reporte diario de producción' })
+  update(
+    @Param('id') id: string,
+    @Body() dto: CreateReportDto,
+    @CurrentUser() user: any,
+    @Req() req: Request,
+  ) {
+    return this.productionService.updateReport(id, dto, user.id, user.rol, req.ip);
   }
 
   @Put('reports/:id/status')

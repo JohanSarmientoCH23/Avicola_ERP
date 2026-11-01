@@ -15,8 +15,8 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      await authService.login(email, password);
-      window.location.href = "/dashboard";
+      const result = await authService.login(email, password);
+      window.location.href = result.user?.rol === "GALPONERO" ? "/dashboard/production" : "/dashboard";
     } catch (err: any) {
       setError(err.response?.data?.message || "Credenciales inválidas");
     } finally {

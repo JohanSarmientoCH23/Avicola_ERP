@@ -67,14 +67,14 @@ export default function UsersPage() {
       ADMINISTRADOR: "bg-red-100 text-red-700",
       CONTADOR: "bg-blue-100 text-blue-700",
       RESPONSABLE_PRODUCCION: "bg-yellow-100 text-yellow-700",
-      GALPONERO: "bg-green-100 text-green-700",
+      GALPONERO: "bg-green-100 text-brand-strong",
       AUDITOR: "bg-purple-100 text-purple-700",
       ALMACENISTA: "bg-orange-100 text-orange-700",
     };
-    return colors[rol] || "bg-gray-100 text-gray-700";
+    return colors[rol] || "bg-surface-container text-ink";
   };
 
-  if (loading) return <div className="flex items-center justify-center h-64"><div className="flex items-center gap-3 text-gray-500"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /><span className="text-sm font-medium">Cargando usuarios...</span></div></div>;
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="flex items-center gap-3 text-ink-soft"><div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" /><span className="text-sm font-medium">Cargando usuarios...</span></div></div>;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -83,7 +83,7 @@ export default function UsersPage() {
           <h1 className="page-title">Gestion de Usuarios</h1>
           <p className="page-subtitle">Administrar cuentas de acceso al sistema</p>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700 sm:w-auto" onClick={() => { setEditingUser(null); setForm({ email: "", nombre: "", apellido: "", password: "", rol: "GALPONERO", telefono: "" }); setShowForm(true); }}>+ Nuevo Usuario</Button>
+        <Button className="bg-brand hover:bg-brand-strong sm:w-auto" onClick={() => { setEditingUser(null); setForm({ email: "", nombre: "", apellido: "", password: "", rol: "GALPONERO", telefono: "" }); setShowForm(true); }}>+ Nuevo Usuario</Button>
       </div>
 
       <Card>
@@ -106,24 +106,24 @@ export default function UsersPage() {
                 {users.map((u) => (
                   <tr key={u.id} className="table-row">
                     <td className="p-3 font-medium">{u.nombre} {u.apellido}</td>
-                    <td className="p-3 text-gray-500">{u.email}</td>
+                    <td className="p-3 text-ink-soft">{u.email}</td>
                     <td className="p-3"><span className={`px-2 py-1 rounded-full text-xs font-medium ${getRolBadge(u.rol)}`}>{u.rol}</span></td>
                     <td className="p-3 text-center">
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${u.estado === "ACTIVO" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700"}`}>{u.estado}</span>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${u.estado === "ACTIVO" ? "bg-green-100 text-brand-strong" : "bg-red-100 text-red-700"}`}>{u.estado}</span>
                     </td>
-                    <td className="p-3 text-gray-500">{u.telefono || "-"}</td>
-                    <td className="p-3 text-gray-500 text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
-                    <td className="p-3 text-gray-500 text-xs">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : "Nunca"}</td>
+                    <td className="p-3 text-ink-soft">{u.telefono || "-"}</td>
+                    <td className="p-3 text-ink-soft text-xs">{new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td className="p-3 text-ink-soft text-xs">{u.lastLoginAt ? new Date(u.lastLoginAt).toLocaleDateString() : "Nunca"}</td>
                     <td className="p-3 text-center">
                       <div className="flex gap-1 justify-center">
                         <Button size="sm" variant="outline" onClick={() => startEdit(u)}>Editar</Button>
-                        {u.estado === "ACTIVO" && <Button size="sm" variant="outline" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => deleteUser(u.id)}>Desactivar</Button>}
+                        {u.estado === "ACTIVO" && <Button size="sm" variant="outline" className="text-error border-red-200 hover:bg-error-container" onClick={() => deleteUser(u.id)}>Desactivar</Button>}
                       </div>
                     </td>
                   </tr>
                 ))}
                 {users.length === 0 && (
-                  <tr><td colSpan={8} className="p-4 text-center text-gray-400">No hay usuarios registrados</td></tr>
+                  <tr><td colSpan={8} className="p-4 text-center text-outline">No hay usuarios registrados</td></tr>
                 )}
               </tbody>
             </table>
@@ -136,19 +136,19 @@ export default function UsersPage() {
           <div className="modal-content">
             <h2 className="text-lg font-bold mb-4">{editingUser ? "Editar Usuario" : "Nuevo Usuario"}</h2>
             <div className="space-y-3">
-              <div><label className="text-xs text-gray-500">Nombre *</label><Input placeholder="Nombre" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} /></div>
-              <div><label className="text-xs text-gray-500">Apellido *</label><Input placeholder="Apellido" value={form.apellido} onChange={e => setForm({...form, apellido: e.target.value})} /></div>
-              <div><label className="text-xs text-gray-500">Email *</label><Input type="email" placeholder="email@avicola.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>
-              {!editingUser && <div><label className="text-xs text-gray-500">Password *</label><Input type="password" placeholder="Password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} /></div>}
-              <div><label className="text-xs text-gray-500">Rol *</label>
+              <div><label className="text-xs text-ink-soft">Nombre *</label><Input placeholder="Nombre" value={form.nombre} onChange={e => setForm({...form, nombre: e.target.value})} /></div>
+              <div><label className="text-xs text-ink-soft">Apellido *</label><Input placeholder="Apellido" value={form.apellido} onChange={e => setForm({...form, apellido: e.target.value})} /></div>
+              <div><label className="text-xs text-ink-soft">Email *</label><Input type="email" placeholder="email@avicola.com" value={form.email} onChange={e => setForm({...form, email: e.target.value})} /></div>
+              {!editingUser && <div><label className="text-xs text-ink-soft">Password *</label><Input type="password" placeholder="Password" value={form.password} onChange={e => setForm({...form, password: e.target.value})} /></div>}
+              <div><label className="text-xs text-ink-soft">Rol *</label>
                 <select className="input-field w-full" value={form.rol} onChange={e => setForm({...form, rol: e.target.value})}>
                   {ROLES.map(r => <option key={r} value={r}>{r.replace(/_/g, " ")}</option>)}
                 </select>
               </div>
-              <div><label className="text-xs text-gray-500">Telefono</label><Input placeholder="Telefono (opcional)" value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} /></div>
+              <div><label className="text-xs text-ink-soft">Telefono</label><Input placeholder="Telefono (opcional)" value={form.telefono} onChange={e => setForm({...form, telefono: e.target.value})} /></div>
               <div className="flex gap-2 justify-end pt-2">
                 <Button variant="outline" onClick={() => { setShowForm(false); setEditingUser(null); }}>Cancelar</Button>
-                <Button className="bg-green-600 hover:bg-green-700" onClick={createUser}>{editingUser ? "Actualizar" : "Crear"}</Button>
+                <Button className="bg-brand hover:bg-brand-strong" onClick={createUser}>{editingUser ? "Actualizar" : "Crear"}</Button>
               </div>
             </div>
           </div>

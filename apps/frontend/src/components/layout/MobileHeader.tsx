@@ -171,31 +171,91 @@ export function DesktopHeader({
   user,
   onLogout,
 }: DesktopHeaderProps) {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("es-CO", { day: "2-digit", month: "short", year: "numeric" }).replace(".", "");
+
+  const rolLabels: Record<string, string> = {
+    ADMINISTRADOR: "Administrador",
+    CONTADOR: "Contador",
+    RESPONSABLE_PRODUCCION: "Resp. de Producción",
+    GALPONERO: "Galponero",
+    AUDITOR: "Auditor",
+    ALMACENISTA: "Almacenista",
+  };
+
+  const initials = user ? `${user.nombre?.[0] || ""}${user.apellido?.[0] || ""}` : "U";
+
   return (
-    <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shadow-sm lg:static lg:shadow-none lg:border-0 lg:bg-transparent">
-      <div className="flex items-center gap-4">
-        <button onClick={onToggleSidebar} className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden">
-          <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <header className="h-[76px] flex-shrink-0 bg-surface-lowest/90 backdrop-blur border-b border-line flex items-center justify-between gap-4 px-5 lg:px-8">
+      <div className="flex items-center gap-3 min-w-0">
+        <button
+          onClick={onToggleSidebar}
+          className="p-2 rounded-xl hover:bg-surface-low transition-colors lg:hidden"
+          aria-label="Abrir menú"
+        >
+          <svg className="w-5 h-5 text-ink" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
-        <h1 className="text-lg font-semibold text-gray-800 lg:text-xl">{title}</h1>
+        <div className="min-w-0">
+          <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-ink-soft font-medium">
+            <span className="hover:text-brand cursor-default">Granja Llano Grande</span>
+            <span className="material-symbols-outlined text-[14px]">chevron_right</span>
+            <span className="text-ink">Centro de Mando Operacional</span>
+          </div>
+          <h1 className="text-base sm:text-lg font-bold text-ink tracking-tight truncate">{title}</h1>
+        </div>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="hidden lg:flex items-center gap-2 text-sm text-gray-500">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span>En línea</span>
+
+      <div className="flex items-center gap-2 sm:gap-3">
+        <div className="hidden xl:flex items-center gap-2 px-3 h-10 rounded-xl border border-line bg-surface-low/60 text-[12px] font-semibold text-ink-soft">
+          <span className="material-symbols-outlined text-[17px] text-brand">calendar_month</span>
+          <span>{fmt(start)}</span>
+          <span className="text-outline">—</span>
+          <span>{fmt(end)}</span>
+          <span className="material-symbols-outlined text-[17px] text-outline">expand_more</span>
         </div>
-        <div className="hidden lg:flex items-center gap-2 text-sm">
-          <span className="font-medium text-gray-700">{user?.nombre} {user?.apellido}</span>
-          <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">{user?.rol}</span>
-        </div>
-        <button onClick={onLogout} className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-lg transition-all duration-200">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          <span className="hidden sm:inline">Salir</span>
+
+        <a
+          href="/dashboard/production"
+          className="hidden md:inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-brand text-white text-[13px] font-semibold shadow-sm hover:bg-brand-strong transition-colors"
+        >
+          <span className="material-symbols-outlined text-[18px]">add</span>
+          Nuevo Movimiento
+        </a>
+
+        <button
+          className="relative w-10 h-10 rounded-xl border border-line bg-surface-lowest flex items-center justify-center text-ink-soft hover:text-brand hover:border-brand/30 transition-colors"
+          aria-label="Notificaciones"
+        >
+          <span className="material-symbols-outlined text-[20px]">notifications</span>
+          <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-error ring-2 ring-surface-lowest" />
         </button>
+
+        <div className="hidden sm:flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-line">
+          <div className="w-9 h-9 rounded-full bg-brand-soft text-brand-dark flex items-center justify-center text-xs font-bold">
+            {initials}
+          </div>
+          <div className="hidden md:block leading-tight">
+            <p className="text-[13px] font-semibold text-ink truncate max-w-[140px]">
+              {user?.nombre} {user?.apellido}
+            </p>
+            <p className="text-[11px] text-ink-soft truncate max-w-[140px]">
+              {rolLabels[user?.rol] || user?.rol}
+            </p>
+          </div>
+          <button
+            onClick={onLogout}
+            className="p-2 rounded-lg text-outline hover:text-error hover:bg-error-container/40 transition-colors"
+            aria-label="Cerrar sesión"
+            title="Cerrar sesión"
+          >
+            <span className="material-symbols-outlined text-[19px]">logout</span>
+          </button>
+        </div>
       </div>
     </header>
   );

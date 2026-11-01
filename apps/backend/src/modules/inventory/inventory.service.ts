@@ -1,5 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma.service';
+import { CreateGallinaDto, CreateHuevoDto, CreateAlimentoDto, CreateBandejaDto } from './dto/create-inventory.dto';
+
+type Tx = Prisma.TransactionClient;
 
 @Injectable()
 export class InventoryService {
@@ -19,14 +23,44 @@ export class InventoryService {
     });
   }
 
-  async createOrUpdateGallina(dto: any) {
-    const existing = await this.prisma.inventarioGallina.findUnique({
-      where: { galponId_fecha: { galponId: dto.galponId, fecha: new Date(dto.fecha) } },
-    });
-    if (existing) {
-      return this.prisma.inventarioGallina.update({ where: { id: existing.id }, data: dto });
+  async createOrUpdateGallina(dto: CreateGallinaDto) {
+    const galpon = await this.prisma.galpon.findUnique({ where: { id: dto.galponId } });
+    if (!galpon) throw new NotFoundException('Galpón no encontrado');
+
+    const saldoFinal = dto.saldoInicial + dto.entradas - dto.mortalidad - dto.ventas - dto.traslados;
+    if (saldoFinal < 0) {
+      throw new BadRequestException(
+        `Saldo final inválido (${saldoFinal}): el día no puede cerrar con saldo negativo de gallinas`
+      );
     }
-    return this.prisma.inventarioGallina.create({ data: { ...dto, fecha: new Date(dto.fecha) } });
+    if (dto.mortalidad > dto.saldoInicial + dto.entradas) {
+      throw new BadRequestException('La mortalidad no puede superar el saldo inicial más entradas');
+    }
+
+    const fecha = new Date(dto.fecha);
+    return this.prisma.inventarioGallina.upsert({
+      where: { galponId_fecha: { galponId: dto.galponId, fecha } },
+      update: {
+        saldoInicial: dto.saldoInicial,
+        entradas: dto.entradas,
+        mortalidad: dto.mortalidad,
+        ventas: dto.ventas,
+        traslados: dto.traslados,
+        saldoFinal,
+        observaciones: dto.observaciones,
+      },
+      create: {
+        galponId: dto.galponId,
+        fecha,
+        saldoInicial: dto.saldoInicial,
+        entradas: dto.entradas,
+        mortalidad: dto.mortalidad,
+        ventas: dto.ventas,
+        traslados: dto.traslados,
+        saldoFinal,
+        observaciones: dto.observaciones,
+      },
+    });
   }
 
   async getKardexHuevos(tipoHuevoId: string, fechaInicio?: string, fechaFin?: string) {
@@ -43,14 +77,41 @@ export class InventoryService {
     });
   }
 
-  async createOrUpdateHuevo(dto: any) {
-    const existing = await this.prisma.inventarioHuevo.findUnique({
-      where: { tipoHuevoId_fecha: { tipoHuevoId: dto.tipoHuevoId, fecha: new Date(dto.fecha) } },
-    });
-    if (existing) {
-      return this.prisma.inventarioHuevo.update({ where: { id: existing.id }, data: dto });
+  async createOrUpdateHuevo(dto: CreateHuevoDto) {
+    const tipoHuevo = await this.prisma.tipoHuevo.findUnique({ where: { id: dto.tipoHuevoId } });
+    if (!tipoHuevo) throw new NotFoundException('Tipo de huevo no encontrado');
+
+    const saldoFinal = dto.saldoInicial + dto.produccion - dto.ventas - dto.perdidas - dto.consumo;
+    if (saldoFinal < 0) {
+      throw new BadRequestException(
+        `Saldo final inválido (${saldoFinal}): el día no puede cerrar con saldo negativo de huevos (${tipoHuevo.codigo})`
+      );
     }
-    return this.prisma.inventarioHuevo.create({ data: { ...dto, fecha: new Date(dto.fecha) } });
+
+    const fecha = new Date(dto.fecha);
+    return this.prisma.inventarioHuevo.upsert({
+      where: { tipoHuevoId_fecha: { tipoHuevoId: dto.tipoHuevoId, fecha } },
+      update: {
+        saldoInicial: dto.saldoInicial,
+        produccion: dto.produccion,
+        ventas: dto.ventas,
+        perdidas: dto.perdidas,
+        consumo: dto.consumo,
+        saldoFinal,
+        observaciones: dto.observaciones,
+      },
+      create: {
+        tipoHuevoId: dto.tipoHuevoId,
+        fecha,
+        saldoInicial: dto.saldoInicial,
+        produccion: dto.produccion,
+        ventas: dto.ventas,
+        perdidas: dto.perdidas,
+        consumo: dto.consumo,
+        saldoFinal,
+        observaciones: dto.observaciones,
+      },
+    });
   }
 
   async getKardexAlimento(galponId: string, fechaInicio?: string, fechaFin?: string) {
@@ -67,14 +128,43 @@ export class InventoryService {
     });
   }
 
-  async createOrUpdateAlimento(dto: any) {
-    const existing = await this.prisma.inventarioAlimento.findUnique({
-      where: { galponId_fecha: { galponId: dto.galponId, fecha: new Date(dto.fecha) } },
-    });
-    if (existing) {
-      return this.prisma.inventarioAlimento.update({ where: { id: existing.id }, data: dto });
+  async createOrUpdateAlimento(dto: CreateAlimentoDto) {
+    const galpon = await this.prisma.galpon.findUnique({ where: { id: dto.galponId } });
+    if (!galpon) throw new NotFoundException('Galpón no encontrado');
+    if (dto.siloId) {
+      const silo = await this.prisma.silo.findUnique({ where: { id: dto.siloId } });
+      if (!silo) throw new NotFoundException('Silo no encontrado');
     }
-    return this.prisma.inventarioAlimento.create({ data: { ...dto, fecha: new Date(dto.fecha) } });
+
+    const saldoFinalKg = Number(dto.saldoInicialKg) + Number(dto.entradasKg) - Number(dto.consumoKg);
+    if (saldoFinalKg < 0) {
+      throw new BadRequestException(
+        `Saldo final inválido (${saldoFinalKg} kg): el día no puede cerrar con saldo negativo de alimento`
+      );
+    }
+
+    const fecha = new Date(dto.fecha);
+    return this.prisma.inventarioAlimento.upsert({
+      where: { galponId_fecha: { galponId: dto.galponId, fecha } },
+      update: {
+        saldoInicialKg: dto.saldoInicialKg,
+        entradasKg: dto.entradasKg,
+        consumoKg: dto.consumoKg,
+        saldoFinalKg,
+        siloId: dto.siloId,
+        observaciones: dto.observaciones,
+      },
+      create: {
+        galponId: dto.galponId,
+        fecha,
+        saldoInicialKg: dto.saldoInicialKg,
+        entradasKg: dto.entradasKg,
+        consumoKg: dto.consumoKg,
+        saldoFinalKg,
+        siloId: dto.siloId,
+        observaciones: dto.observaciones,
+      },
+    });
   }
 
   async getKardexBandejas(galponId: string, fechaInicio?: string, fechaFin?: string) {
@@ -86,28 +176,84 @@ export class InventoryService {
     }
     return this.prisma.inventarioBandeja.findMany({
       where,
-      orderBy: { fecha: 'asc' },
+      orderBy: [{ fecha: 'asc' }, { tipo: 'asc' }],
       include: { galpon: { select: { codigo: true } } },
     });
   }
 
-  async createOrUpdateBandeja(dto: any) {
-    const existing = await this.prisma.inventarioBandeja.findUnique({
-      where: { galponId_fecha_tipo: { galponId: dto.galponId, fecha: new Date(dto.fecha), tipo: dto.tipo } },
-    });
-    if (existing) {
-      return this.prisma.inventarioBandeja.update({ where: { id: existing.id }, data: dto });
+  async createOrUpdateBandeja(dto: CreateBandejaDto) {
+    const galpon = await this.prisma.galpon.findUnique({ where: { id: dto.galponId } });
+    if (!galpon) throw new NotFoundException('Galpón no encontrado');
+
+    const saldoBodega = dto.saldoAnterior + dto.entradas - dto.salidas;
+    if (saldoBodega < 0) {
+      throw new BadRequestException(
+        `Saldo bodega inválido (${saldoBodega}): no puede quedar negativo para bandejas ${dto.tipo}`
+      );
     }
-    return this.prisma.inventarioBandeja.create({ data: { ...dto, fecha: new Date(dto.fecha) } });
+
+    const fecha = new Date(dto.fecha);
+    return this.prisma.inventarioBandeja.upsert({
+      where: { galponId_fecha_tipo: { galponId: dto.galponId, fecha, tipo: dto.tipo } },
+      update: {
+        entradas: dto.entradas,
+        salidas: dto.salidas,
+        saldoAnterior: dto.saldoAnterior,
+        saldoBodega,
+        observaciones: dto.observaciones,
+      },
+      create: {
+        galponId: dto.galponId,
+        fecha,
+        tipo: dto.tipo,
+        entradas: dto.entradas,
+        salidas: dto.salidas,
+        saldoAnterior: dto.saldoAnterior,
+        saldoBodega,
+        observaciones: dto.observaciones,
+      },
+    });
   }
 
   async getResumenInventarios() {
-    const [gallinas, huevos, alimento, bandejas] = await Promise.all([
-      this.prisma.inventarioGallina.groupBy({ by: ['galponId'], _sum: { saldoFinal: true }, orderBy: { galponId: 'asc' } }),
-      this.prisma.inventarioHuevo.groupBy({ by: ['tipoHuevoId'], _sum: { saldoFinal: true }, orderBy: { tipoHuevoId: 'asc' } }),
-      this.prisma.inventarioAlimento.groupBy({ by: ['galponId'], _sum: { saldoFinalKg: true }, orderBy: { galponId: 'asc' } }),
-      this.prisma.inventarioBandeja.groupBy({ by: ['galponId', 'tipo'], _sum: { saldoBodega: true }, orderBy: { galponId: 'asc' } }),
+    const [gallinasRows, huevosRows, alimentoRows, bandejasRows] = await Promise.all([
+      this.prisma.inventarioGallina.findMany({ orderBy: [{ fecha: 'desc' }, { createdAt: 'desc' }] }),
+      this.prisma.inventarioHuevo.findMany({ orderBy: [{ fecha: 'desc' }, { createdAt: 'desc' }] }),
+      this.prisma.inventarioAlimento.findMany({ orderBy: [{ fecha: 'desc' }, { createdAt: 'desc' }] }),
+      this.prisma.inventarioBandeja.findMany({ orderBy: [{ fecha: 'desc' }, { createdAt: 'desc' }] }),
     ]);
-    return { gallinas, huevos, alimento, bandejas };
+
+    return {
+      gallinas: this.latestBy(gallinasRows, (r) => r.galponId).map((r) => ({
+        galponId: r.galponId,
+        fecha: r.fecha,
+        saldoFinal: r.saldoFinal,
+      })),
+      huevos: this.latestBy(huevosRows, (r) => r.tipoHuevoId).map((r) => ({
+        tipoHuevoId: r.tipoHuevoId,
+        fecha: r.fecha,
+        saldoFinal: r.saldoFinal,
+      })),
+      alimento: this.latestBy(alimentoRows, (r) => r.galponId).map((r) => ({
+        galponId: r.galponId,
+        fecha: r.fecha,
+        saldoFinalKg: r.saldoFinalKg,
+      })),
+      bandejas: this.latestBy(bandejasRows, (r) => `${r.galponId}:${r.tipo}`).map((r) => ({
+        galponId: r.galponId,
+        tipo: r.tipo,
+        fecha: r.fecha,
+        saldoBodega: r.saldoBodega,
+      })),
+    };
+  }
+
+  private latestBy<T>(rows: T[], key: (row: T) => string): T[] {
+    const map = new Map<string, T>();
+    for (const row of rows) {
+      const k = key(row);
+      if (!map.has(k)) map.set(k, row);
+    }
+    return Array.from(map.values());
   }
 }
